@@ -6,6 +6,7 @@
 
 # as the name implies: content is secret
 include/secrets.h
+secrets.h
 
 #---- c++ stuff
 # Prerequisites
