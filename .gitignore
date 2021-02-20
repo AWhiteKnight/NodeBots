@@ -5,7 +5,7 @@
 .vscode/ipch
 
 # as the name implies: content is secret
-#secret*.*
+include/secrets.h
 
 #---- c++ stuff
 # Prerequisites
