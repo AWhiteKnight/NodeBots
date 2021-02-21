@@ -27,6 +27,10 @@ const String defaultMimeType = "text/html";
 
 static AsyncWebServer server( 80 );
 
+// task prototypes
+void checkIP();
+Task taskCheckIP( 60000UL , TASK_FOREVER, &checkIP );
+
 // namespace to keep calllbacks local
 // implementation below
 namespace BotWebServerCallbacks
@@ -45,9 +49,10 @@ class BotWebServer
             // set the callbacks
             MESH.onReceive( &receivedCallback );
 
-            String hostname = "";
             // implement the bridge
             MESH.stationManual( WLAN_SSID, WLAN_PASSWORD );
+
+            String hostname = "";
             // set the hostname depending on build_flags
             #ifdef UNIQUE_HOSTNAME
                 hostname = UNIQUE_HOSTNAME;
@@ -60,11 +65,15 @@ class BotWebServer
             MESH.setHostname( hostname.c_str() );
             Serial.println( "My Hostname is " + hostname );
             Serial.println( "My AP IP is " + MESH.getAPIP().toString() );
-            Serial.println( "My IP is " + MESH.getStationIP().toString() );
+        }
 
+        void startWebServer()
+        {
+            Serial.println( "starting WebServer" );
             // webserver routes from specialized to general!
             // api call to mesh structure, this is possible without sd-card
-            server.on(
+            server.on
+            (
                 "/api/getMeshStructure",
                 HTTP_GET,
                 [](AsyncWebServerRequest *request )
@@ -81,12 +90,26 @@ class BotWebServer
             );
             // start web server
             server.begin();
+
+            // add Tasks
+            MESH.getDefaultSCheduler().addTask( taskCheckIP );
+            taskCheckIP.enableDelayed(60000UL);
         };
 
     protected:
 
     private:
 
+};
+
+void checkIP()
+{
+    if(MESH.getStationIP())
+    {
+        Serial.println( "WebServer IP is " + MESH.getStationIP().toString() );
+        taskCheckIP.disable();
+        //taskCheckIP.remove();
+    }
 };
 
 // namespace to keep callbacks local

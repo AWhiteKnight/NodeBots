@@ -37,10 +37,6 @@ class BotHelloWorld
             taskBotHelloWorld.enable();
         };
 
-        void addTasks()
-        {
-        };
-
         inline void runOnce() {};
 
 

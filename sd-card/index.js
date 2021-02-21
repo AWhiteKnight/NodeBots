@@ -73,8 +73,8 @@ const ellipseChart = (data) => {
 		.selectAll("ellipse").data(nodes).join("ellipse")
 		.attr("rx", d => d.rx )
 		.attr("ry", d => d.ry )
-		.attr("fill", d => d.depth == 0 ? "#0ff" : d.data.root ? "#f6f" : "#0f0" )
-		.attr("stroke", d => d.depth == 0 ? "#066" : d.data.root ? "#f0f" :"#0f0" )
+		.attr("fill", d => d.depth == 0 ? "#f6f" : d.data.root ? "#0ff" : "#0f0" )
+		.attr("stroke", d => d.depth == 0 ? "#f0f" : d.data.root ? "#066" :"#0f0" )
 		.call(drag(simulation));
 
 	node.append("title")

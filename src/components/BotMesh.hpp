@@ -45,8 +45,9 @@ class BotMesh : public painlessMesh
             setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
 
             // Create mesh object with mode WIFI_AP_STA = Station and AccessPoint 
-            init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
+            MESH.init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
 
+            //#if defined(IS_ROOT) || defined(HAS_WEB_SERVER)
             #ifdef IS_ROOT
             // as the name implies: this is the root. There should only be one!
             MESH.setRoot( true );
