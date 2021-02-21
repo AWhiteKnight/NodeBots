@@ -15,7 +15,7 @@
 using namespace painlessmesh;
 
 /**
- * extMesh is an extension to painlessMesh 
+ * BotMesh is an extension to painlessMesh 
  * @see https://gitlab.com/painlessMesh/painlessMesh .
  */
 class BotMesh : public painlessMesh
@@ -23,8 +23,7 @@ class BotMesh : public painlessMesh
     public:
         inline static BotMesh & getInstance()
         {
-            static BotMesh instance;    // Guaranteed to be destroyed.
-                                        // Instantiated on first use.
+            static BotMesh instance;    // Guaranteed to be destroyed, instantiated on first use.
             return instance;
         }
 

@@ -17,21 +17,24 @@ class NodeBot
     public:
         static NodeBot & getInstance()
         {
-            static NodeBot instance;    // Guaranteed to be destroyed.
-                                        // Instantiated on first use.
+            static NodeBot instance;    // Guaranteed to be destroyed, instantiated on first use.
             return instance;
         }
 
         void setup() {
             BotMesh::getInstance().setup();
+            #ifdef HELLO_WORLD
             HelloWorld::getInstance().setup();
+            #endif
         };
 
         void runOnce()
         {
             // this will run the user scheduler as well
             BotMesh::getInstance().runOnce();
+            //#ifdef HELLO_WORLD
             //HelloWorld::getInstance().runOnce();
+            //#endif
         };
 
     protected:

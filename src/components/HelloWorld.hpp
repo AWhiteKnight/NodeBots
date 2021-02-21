@@ -8,23 +8,28 @@
 
 #include "BotMesh.hpp"
 
-// prototypes
-void helloWorld();
-void receivedCallback( uint32_t from, String &msg );
-void newConnectionCallback( uint32_t nodeId );
-void changedConnectionCallback();
-void nodeTimeAdjustedCallback( int32_t offset );
-void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay );
+// task prototypes
+void broadcastHelloWorld();
+Task taskHelloWorld( 3000UL , TASK_FOREVER, &broadcastHelloWorld );
 
-Task taskHelloWorld( 3000UL , TASK_FOREVER, &helloWorld );
+// namespace to keep calllbacks local
+// implementation below
+namespace HelloWorldCallbacks
+{
+    void receivedCallback( uint32_t from, String &msg );
+    void newConnectionCallback( uint32_t nodeId );
+    void changedConnectionCallback();
+    void nodeTimeAdjustedCallback( int32_t offset );
+    void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay );
+}
 
+using namespace HelloWorldCallbacks;
 class HelloWorld
 {
     public:
         static HelloWorld & getInstance()
         {
-            static HelloWorld instance; // Guaranteed to be destroyed.
-                                        // Instantiated on first use.
+            static HelloWorld instance; // Guaranteed to be destroyed, instantiated on first use.
             return instance;
         }
 
@@ -71,38 +76,41 @@ class HelloWorld
 #endif
 };
 
-void helloWorld()
+void broadcastHelloWorld()
 {
     Serial.println("called helloWorld()");
     BotMesh::getInstance().sendBroadcast( "Hello world!" );
 };
 
-// callbacks for mesh
-void receivedCallback( uint32_t from, String &msg )
+// namespace to keep calllbacks local
+namespace HelloWorldCallbacks
 {
-    Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
-};
+    // callbacks for mesh
+    void receivedCallback( uint32_t from, String &msg )
+    {
+        Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
+    };
 
-void newConnectionCallback( uint32_t nodeId )
-{
-    Serial.printf( "New Connection, nodeId = %u\n", nodeId );
-    BotMesh::getInstance().sendSingle( nodeId, "Hello, I am the new one." );
-};
+    void newConnectionCallback( uint32_t nodeId )
+    {
+        Serial.printf( "New Connection, nodeId = %u\n", nodeId );
+        BotMesh::getInstance().sendSingle( nodeId, "Hello, I am the new one." );
+    };
 
-void changedConnectionCallback()
-{
-    Serial.printf( "Changed connections\n" );
-};
+    void changedConnectionCallback()
+    {
+        Serial.printf( "Changed connections\n" );
+    };
 
-void nodeTimeAdjustedCallback( int32_t offset )
-{
-    Serial.printf( "Adjusted time %u. Offset = %d\n", BotMesh::getInstance().getNodeTime(), offset) ;
-};
+    void nodeTimeAdjustedCallback( int32_t offset )
+    {
+        Serial.printf( "Adjusted time %u. Offset = %d\n", BotMesh::getInstance().getNodeTime(), offset) ;
+    };
 
-void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay )
-{
-    Serial.printf( "Delay from node:%u delay = %d\n", nodeId, delay );
-};
-
+    void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay )
+    {
+        Serial.printf( "Delay from node:%u delay = %d\n", nodeId, delay );
+    };
+}
 
 #endif
