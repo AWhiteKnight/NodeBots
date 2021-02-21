@@ -19,10 +19,21 @@ using namespace painlessmesh;
 // macro to shorten lines
 #define MESH BotMesh::getInstance()
 
+// namespace to keep callbacks local
+// implementation below
+namespace BotMeshCallbacks
+{
+    void newConnectionCallback( uint32_t nodeId );
+    void changedConnectionCallback();
+    void nodeTimeAdjustedCallback( int32_t offset );
+    void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay );
+}
+
 /**
  * BotMesh is an extension to painlessMesh 
  * @see https://gitlab.com/painlessMesh/painlessMesh .
  */
+using namespace BotMeshCallbacks;
 class BotMesh : public painlessMesh
 {
     MAKE_SINGLETON(BotMesh)
@@ -50,12 +61,18 @@ class BotMesh : public painlessMesh
             #ifdef OTA_ROLE
             MESH.initOTAReceive( OTA_ROLE );
             #endif
+
+            MESH.onNewConnection( &newConnectionCallback );
+            MESH.onChangedConnections( &changedConnectionCallback );
+            //MESH.onNodeTimeAdjusted( &nodeTimeAdjustedCallback );
+            //MESH.onNodeDelayReceived( &nodeDelayReceivedCallback );
         };
 
-        inline void runOnce()
+        using painlessMesh::update;
+        inline void update()
         {
             // this will also run the defaultScheduler
-            update();
+            return painlessMesh::update();
         };
 
         Scheduler & getDefaultSCheduler()
@@ -69,5 +86,29 @@ class BotMesh : public painlessMesh
         Scheduler defaultScheduler;     // to control tasks
 
 };
+
+// namespace to keep callbacks local
+namespace BotMeshCallbacks
+{
+    void newConnectionCallback( uint32_t nodeId )
+    {
+        Serial.printf( "New Connection, nodeId = %u\n", nodeId );
+    };
+
+    void changedConnectionCallback()
+    {
+        Serial.printf( "Changed Connections\n" );
+    };
+
+    void nodeTimeAdjustedCallback( int32_t offset )
+    {
+        Serial.printf( "Adjusted time %u. Offset = %d\n", MESH.getNodeTime(), offset) ;
+    };
+
+    void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay )
+    {
+        Serial.printf( "Delay from node:%u delay = %d\n", nodeId, delay );
+    };
+}
 
 #endif

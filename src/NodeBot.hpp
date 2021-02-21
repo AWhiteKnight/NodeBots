@@ -36,13 +36,10 @@ class NodeBot
             #endif
         };
 
-        void runOnce()
+        void update()
         {
             // this will run the user scheduler as well
-            BotMesh::getInstance().runOnce();
-            //#ifdef HELLO_WORLD  // should be defined as build flag in platformio.ini
-            //HelloWorld::getInstance().runOnce();
-            //#endif
+            MESH.update();
         };
 
     protected:

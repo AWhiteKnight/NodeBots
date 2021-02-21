@@ -12,13 +12,14 @@
 
 #include "IPAddress.h"
 
-#ifdef ESP32
-    #include <AsyncTCP.h>
-#elif defined( ESP8266 )
+#ifdef ESP8266
     #include "Hash.h"
     #include <ESPAsyncTCP.h>
+#else
+    #include <AsyncTCP.h>
 #endif
 #include <ESPAsyncWebServer.h>
+
 
 const String corsHeader = "Access-Control-Allow-Origin";
 const String corsValue = "*";
@@ -26,6 +27,14 @@ const String defaultMimeType = "text/html";
 
 static AsyncWebServer server( 80 );
 
+// namespace to keep calllbacks local
+// implementation below
+namespace BotWebServerCallbacks
+{
+    void receivedCallback( uint32_t from, String &msg );
+}
+
+using namespace BotWebServerCallbacks;
 class BotWebServer
 {
     MAKE_SINGLETON(BotWebServer)
@@ -33,6 +42,9 @@ class BotWebServer
     public:
         void setup()
         {
+            // set the callbacks
+            MESH.onReceive( &receivedCallback );
+
             String hostname = "";
             // implement the bridge
             MESH.stationManual( WLAN_SSID, WLAN_PASSWORD );
@@ -76,5 +88,15 @@ class BotWebServer
     private:
 
 };
+
+// namespace to keep callbacks local
+namespace BotWebServerCallbacks
+{
+    // callbacks for mesh
+    void receivedCallback( uint32_t from, String &msg )
+    {
+        Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
+    };
+}
 
 #endif

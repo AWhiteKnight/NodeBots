@@ -15,5 +15,5 @@ void setup() {
 }
 
 void loop() {
-  bot.runOnce();
+  bot.update();
 }
