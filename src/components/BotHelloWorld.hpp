@@ -12,7 +12,7 @@
 
 // task prototypes
 void broadcastBotHelloWorld();
-Task taskBotHelloWorld( 3000UL , TASK_FOREVER, &broadcastBotHelloWorld );
+Task taskBotHelloWorld( 60000UL , TASK_FOREVER, &broadcastBotHelloWorld );
 
 // namespace to keep calllbacks local
 // implementation below

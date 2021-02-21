@@ -36,6 +36,16 @@ class BotMesh : public painlessMesh
             // Create mesh object with mode WIFI_AP_STA = Station and AccessPoint 
             init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
 
+            #ifdef IS_ROOT
+            // as the name implies: this is the root. There should only be one!
+            MESH.setRoot( true );
+            #endif
+
+            // A node should ideally know the mesh contains a root
+            // If no root is present, restructuring might slow down, but still should work
+            // So call this on all nodes
+            MESH.setContainsRoot();
+
             // enable OTA if a role is defined (should be done as build flag)
             #ifdef OTA_ROLE
             MESH.initOTAReceive( OTA_ROLE );
