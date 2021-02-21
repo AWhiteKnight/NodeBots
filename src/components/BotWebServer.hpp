@@ -6,6 +6,8 @@
  */
 #include <Arduino.h>
 
+#include "patterns.h"
+
 #include "BotMesh.hpp"
 
 #include "IPAddress.h"
@@ -26,35 +28,29 @@ static AsyncWebServer server( 80 );
 
 class BotWebServer
 {
-    public:
-        static BotWebServer & getInstance()
-        {
-            // Guaranteed to be destroyed, instantiated on first use.
-            static BotWebServer instance;
-            return instance;
-        };
+    MAKE_SINGLETON(BotWebServer)
 
+    public:
         void setup()
         {
             String hostname = "";
             // implement the bridge
-            BotMesh::getInstance().stationManual( WLAN_SSID, WLAN_PASSWORD );
+            MESH.stationManual( WLAN_SSID, WLAN_PASSWORD );
             // set the hostname depending on build_flags
             #ifdef UNIQUE_HOSTNAME
                 hostname = UNIQUE_HOSTNAME;
             #elif defined(HOSTNAME)
                 hostname = HOSTNAME;
-                hostname += BotMesh::getInstance().getNodeId();
+                hostname += MESH.getNodeId();
             #else
                 hostname += BotMesh::getInstance().getNodeId();
             #endif
-            BotMesh::getInstance().setHostname( hostname.c_str() );
+            MESH.setHostname( hostname.c_str() );
             Serial.println( "My Hostname is " + hostname );
-            Serial.println( "My AP IP is " + BotMesh::getInstance().getAPIP().toString() );
-            Serial.println( "My IP is " + BotMesh::getInstance().getStationIP().toString() );
+            Serial.println( "My AP IP is " + MESH.getAPIP().toString() );
+            Serial.println( "My IP is " + MESH.getStationIP().toString() );
 
-            // async webserver
-            // webserver routes
+            // webserver routes from specialized to general!
             // api call to mesh structure, this is possible without sd-card
             server.on(
                 "/api/getMeshStructure",
@@ -65,7 +61,7 @@ class BotWebServer
                     (
                         200,
                         defaultMimeType,
-                        BotMesh::getInstance().subConnectionJson().c_str()
+                        MESH.subConnectionJson().c_str()
                     );
                     response->addHeader(corsHeader, corsValue);
                     request->send(response);
@@ -78,25 +74,7 @@ class BotWebServer
     protected:
 
     private:
-        // Constructor (the {} brackets) are needed here).
-        BotWebServer() {};
 
-    // Make sure these are inaccessible(especially from outside), 
-    // otherwise, we may accidentally get copies of the singleton appearing.
-#if (__cplusplus >= 201103L)
-    public:
-        // Scott Meyers mentions in his Effective Modern
-        // C++ book, that deleted functions should generally
-        // be public as it results in better error messages
-        // due to the compilers behavior to check accessibility
-        // before deleted status    public:
-        BotWebServer(BotWebServer const&)    = delete;
-        void operator=(BotWebServer const&)  = delete;
-#else
-    private:
-        BotWebServer(BotWebServer const&);   // Don't Implement
-        void operator=(BotWebServer const&); // Don't implement
-#endif
 };
 
 #endif

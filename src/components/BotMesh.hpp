@@ -8,11 +8,16 @@
  */
 #include <Arduino.h>
 
+#include"patterns.h"
+
 // defines for the MESH SSID etc. to use
 #include "secrets.h"
 
 #include <painlessMesh.h>
 using namespace painlessmesh;
+
+// macro to shorten lines
+#define MESH BotMesh::getInstance()
 
 /**
  * BotMesh is an extension to painlessMesh 
@@ -20,13 +25,9 @@ using namespace painlessmesh;
  */
 class BotMesh : public painlessMesh
 {
-    public:
-        inline static BotMesh & getInstance()
-        {
-            static BotMesh instance;    // Guaranteed to be destroyed, instantiated on first use.
-            return instance;
-        };
+    MAKE_SINGLETON(BotMesh)
 
+    public:
         void setup()
         {
             //ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE
@@ -37,7 +38,7 @@ class BotMesh : public painlessMesh
 
             // enable OTA if a role is defined (should be done as build flag)
             #ifdef OTA_ROLE
-            BotMesh::getInstance().initOTAReceive( OTA_ROLE );
+            MESH.initOTAReceive( OTA_ROLE );
             #endif
         };
 
@@ -57,25 +58,6 @@ class BotMesh : public painlessMesh
     private:
         Scheduler defaultScheduler;     // to control tasks
 
-        // Constructor (the {} brackets) are needed here).
-        BotMesh() {};
-
-    // Make sure these are inaccessible(especially from outside), 
-    // otherwise, we may accidentally get copies of the singleton appearing.
-#if (__cplusplus >= 201103L)
-    public:
-        // Scott Meyers mentions in his Effective Modern
-        // C++ book, that deleted functions should generally
-        // be public as it results in better error messages
-        // due to the compilers behavior to check accessibility
-        // before deleted status    public:
-        BotMesh(BotMesh const&)         = delete;
-        void operator=(BotMesh const&)  = delete;
-#else
-    private:
-        BotMesh(BotMesh const&);        // Don't Implement
-        void operator=(BotMesh const&); // Don't implement
-#endif
 };
 
 #endif
