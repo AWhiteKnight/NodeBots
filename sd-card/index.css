@@ -1,0 +1,22 @@
+
+body {
+	width: 100%;
+	margin: 0px;
+	background-color: lightgrey;
+}
+
+.link line {
+	stroke: black;
+	stroke-width: 2.0;
+	stroke-opacity: 1.0;
+}
+  
+.node line {
+	stroke-width: 2.0;
+	stroke-opacity: 1.0;
+}
+
+.labels text {
+	pointer-events: none;
+	font: 10px sans-serif;
+}

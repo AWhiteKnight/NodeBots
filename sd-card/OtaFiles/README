@@ -1,0 +1,7 @@
+
+This directory is intended for OTA update files.
+
+Files should be named 'firmware_<device>_<role>.bin
+where 
+    - device is either ESP32 or ESP8266
+    - role is the value given in the call: mesh.initOTAReceive( "cole" );
