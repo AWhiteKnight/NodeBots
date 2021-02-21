@@ -9,8 +9,15 @@
 // a specialization of painlessMesh to implement extensions
 #include "components/BotMesh.hpp"
 
+#ifdef HELLO_WORLD  // should be defined as build flag in platformio.ini
 // a simple hello world component
 #include "components/HelloWorld.hpp"
+#endif
+
+#ifdef HAS_WEB_SERVER  // should be defined as build flag in platformio.ini
+// the web server component
+#include "components/BotWebServer.hpp"
+#endif
 
 class NodeBot
 {
@@ -19,12 +26,15 @@ class NodeBot
         {
             static NodeBot instance;    // Guaranteed to be destroyed, instantiated on first use.
             return instance;
-        }
+        };
 
         void setup() {
             BotMesh::getInstance().setup();
-            #ifdef HELLO_WORLD
+            #ifdef HELLO_WORLD  // should be defined as build flag in platformio.ini
             HelloWorld::getInstance().setup();
+            #endif
+            #ifdef HAS_WEB_SERVER  // should be defined as build flag in platformio.ini
+            BotWebServer::getInstance().setup();
             #endif
         };
 
@@ -32,7 +42,7 @@ class NodeBot
         {
             // this will run the user scheduler as well
             BotMesh::getInstance().runOnce();
-            //#ifdef HELLO_WORLD
+            //#ifdef HELLO_WORLD  // should be defined as build flag in platformio.ini
             //HelloWorld::getInstance().runOnce();
             //#endif
         };

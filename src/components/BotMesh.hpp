@@ -25,7 +25,7 @@ class BotMesh : public painlessMesh
         {
             static BotMesh instance;    // Guaranteed to be destroyed, instantiated on first use.
             return instance;
-        }
+        };
 
         void setup()
         {
@@ -34,6 +34,11 @@ class BotMesh : public painlessMesh
 
             // Create mesh object with mode WIFI_AP_STA = Station and AccessPoint 
             init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
+
+            // enable OTA if a role is defined (should be done as build flag)
+            #ifdef OTA_ROLE
+            BotMesh::getInstance().initOTAReceive( OTA_ROLE );
+            #endif
         };
 
         inline void runOnce()
@@ -45,7 +50,7 @@ class BotMesh : public painlessMesh
         Scheduler & getDefaultSCheduler()
         {
             return defaultScheduler;
-        }
+        };
 
     protected:
 
