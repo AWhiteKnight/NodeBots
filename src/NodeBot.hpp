@@ -20,15 +20,27 @@ static Scheduler defaultScheduler;
 static BotMesh mesh;
 
 #ifdef HELLO_WORLD  // should be defined as build flag in platformio.ini
-// a simple hello world component
-#include "components/BotHelloWorld.hpp"
-static BotHelloWorld hello;
+    // a simple hello world component
+    #include "components/BotHelloWorld.hpp"
+    static BotHelloWorld hello;
 #endif
 
 #ifdef HAS_WEB_SERVER  // should be defined as build flag in platformio.ini
-// the web server component
-#include "components/BotWebServer.hpp"
-static BotWebServer webServer;
+    // the web server component
+    #include "components/BotWebServer.hpp"
+    static BotWebServer webServer;
+#endif
+
+#ifdef HAS_CHASSIS  // should be defined as build flag in platformio.ini
+    // the chassis component
+    #include "components/BotChassis.hpp"
+    static BotChassis chassis;
+#endif
+
+#ifdef HAS_CONTROL  // should be defined as build flag in platformio.ini
+    // the control component
+    #include "components/BotControl.hpp"
+    static BotControl control;
 #endif
 
 // namespace to keep callbacks local
@@ -60,8 +72,8 @@ class NodeBot
 
             //#if defined(IS_ROOT) || defined(HAS_WEB_SERVER)
             #ifdef IS_ROOT
-            // as the name implies: this is the root. There should only be one!
-            mesh.setRoot( true );
+                // as the name implies: this is the root. There should only be one!
+                mesh.setRoot( true );
             #endif
 
             // A node should ideally know the mesh contains a root
@@ -71,7 +83,7 @@ class NodeBot
 
             // enable OTA if a role is defined (should be done as build flag)
             #ifdef OTA_ROLE
-            mesh.initOTAReceive( OTA_ROLE );
+                mesh.initOTAReceive( OTA_ROLE );
             #endif
 
             mesh.onNewConnection( &_NodeBot::newConnectionCallback );
@@ -79,18 +91,24 @@ class NodeBot
             mesh.onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
             mesh.onNodeDelayReceived( &_NodeBot::nodeDelayReceivedCallback );
 
-            #ifdef HELLO_WORLD  // should be defined as build flag in platformio.ini
-            hello.setup( mesh, defaultScheduler );
+            #ifdef HELLO_WORLD
+                hello.setup( mesh, defaultScheduler );
             #endif
             
-            #ifdef HAS_WEB_SERVER  // should be defined as build flag in platformio.ini
-            // setup BotWebServer
-            webServer.setup( mesh, defaultScheduler );
+            #ifdef HAS_WEB_SERVER
+                webServer.setup( mesh, defaultScheduler );
             #endif
 
-            #ifdef HAS_WEB_SERVER  // should be defined as build flag in platformio.ini
-            // start BotWebServer
-            webServer.startWebServer();
+            #ifdef HAS_CHASSIS
+                chassis.setup( mesh, defaultScheduler );
+            #endif
+
+            #ifdef HAS_CONTROL
+                control.setup( mesh, defaultScheduler );
+            #endif
+
+            #ifdef HAS_WEB_SERVER
+                webServer.startWebServer();
             #endif
 
             Serial.println("bot setup end");
