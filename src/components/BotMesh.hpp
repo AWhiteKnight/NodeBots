@@ -8,11 +8,6 @@
  */
 #include <Arduino.h>
 
-#include"patterns.h"
-
-// defines for the MESH SSID etc. to use
-#include "secrets.h"
-
 #include <painlessMesh.h>
 using namespace painlessmesh;
 

@@ -6,7 +6,8 @@
  */
 #include <Arduino.h>
 
-#include "patterns.h"
+// defines for the MESH SSID etc. to use
+#include "secrets.h"
 
 // a specialization of painlessMesh to implement extensions
 #include "components/BotMesh.hpp"

@@ -6,8 +6,6 @@
  */
 #include <Arduino.h>
 
-#include "patterns.h"
-
 #include "BotMesh.hpp"
 
 // namespace to keep things local
