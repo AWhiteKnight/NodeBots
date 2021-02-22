@@ -27,30 +27,36 @@ const String defaultMimeType = "text/html";
 
 static AsyncWebServer server( 80 );
 
-// task prototypes
-void checkIP();
-Task taskCheckIP( 60000UL , TASK_FOREVER, &checkIP );
-
-// namespace to keep calllbacks local
+// namespace to keep callbacks local
 // implementation below
-namespace BotWebServerCallbacks
+namespace _BotWebServer
 {
+    BotMesh * pMesh;   
+
+    // prototypes - implementation below
+    void checkIP();
     void receivedCallback( uint32_t from, String &msg );
+
+    // Task definitions
+    Task taskCheckIP( 60000UL , TASK_FOREVER, &checkIP );
 }
 
-using namespace BotWebServerCallbacks;
+
 class BotWebServer
 {
-    MAKE_SINGLETON(BotWebServer)
-
     public:
-        void setup()
+        BotWebServer()
+        {
+
+        };
+
+        void setup( BotMesh & mesh, Scheduler & defaultScheduler )
         {
             // set the callbacks
-            MESH.onReceive( &receivedCallback );
+            mesh.onReceive( &_BotWebServer::receivedCallback );
 
             // implement the bridge
-            MESH.stationManual( WLAN_SSID, WLAN_PASSWORD );
+            mesh.stationManual( WLAN_SSID, WLAN_PASSWORD );
 
             String hostname = "";
             // set the hostname depending on build_flags
@@ -62,9 +68,16 @@ class BotWebServer
             #else
                 hostname += BotMesh::getInstance().getNodeId();
             #endif
-            MESH.setHostname( hostname.c_str() );
+            mesh.setHostname( hostname.c_str() );
             Serial.println( "My Hostname is " + hostname );
-            Serial.println( "My AP IP is " + MESH.getAPIP().toString() );
+            Serial.println( "My AP IP is " + mesh.getAPIP().toString() );
+
+            // add Tasks
+            defaultScheduler.addTask( _BotWebServer::taskCheckIP );
+            _BotWebServer::taskCheckIP.enableDelayed(60000UL);
+
+            // remember mesh for future use
+            _BotWebServer::pMesh = &mesh;
         }
 
         void startWebServer()
@@ -82,7 +95,7 @@ class BotWebServer
                     (
                         200,
                         defaultMimeType,
-                        MESH.subConnectionJson().c_str()
+                        _BotWebServer::pMesh->subConnectionJson().c_str()
                     );
                     response->addHeader(corsHeader, corsValue);
                     request->send(response);
@@ -90,10 +103,6 @@ class BotWebServer
             );
             // start web server
             server.begin();
-
-            // add Tasks
-            MESH.getDefaultSCheduler().addTask( taskCheckIP );
-            taskCheckIP.enableDelayed(60000UL);
         };
 
     protected:
@@ -102,19 +111,20 @@ class BotWebServer
 
 };
 
-void checkIP()
+// implementation of namespace
+namespace _BotWebServer
 {
-    if(MESH.getStationIP())
+    // callback for scheduler
+    void checkIP()
     {
-        Serial.println( "WebServer IP is " + MESH.getStationIP().toString() );
-        taskCheckIP.disable();
-        //taskCheckIP.remove();
-    }
-};
+        if(pMesh->getStationIP())
+        {
+            Serial.println( "WebServer IP is " + pMesh->getStationIP().toString() );
+            taskCheckIP.disable();
+            //taskCheckIP.remove();
+        }
+    };
 
-// namespace to keep callbacks local
-namespace BotWebServerCallbacks
-{
     // callbacks for mesh
     void receivedCallback( uint32_t from, String &msg )
     {

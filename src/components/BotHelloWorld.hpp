@@ -10,35 +10,39 @@
 
 #include "BotMesh.hpp"
 
-// task prototypes
-void broadcastBotHelloWorld();
-Task taskBotHelloWorld( 60000UL , TASK_FOREVER, &broadcastBotHelloWorld );
-
-// namespace to keep callbacks local
-// implementation below
-namespace BotHelloWorldCallbacks
+// namespace to keep things local
+namespace _BotHelloWorld
 {
+    BotMesh * pMesh;
+
+    // prototypes - implementation below
+    void broadcastBotHelloWorld();
     void receivedCallback( uint32_t from, String &msg );
+
+    // Task definitions
+    Task taskBotHelloWorld( 60000UL , TASK_FOREVER, &broadcastBotHelloWorld );
 }
 
-using namespace BotHelloWorldCallbacks;
 class BotHelloWorld
-{
-    MAKE_SINGLETON(BotHelloWorld)
-
+{ 
     public:
-        void setup()
+        BotHelloWorld()
         {
-            // set the callbacks
-            MESH.onReceive( &receivedCallback );
-            
-            // add Tasks
-            MESH.getDefaultSCheduler().addTask( taskBotHelloWorld );
-            taskBotHelloWorld.enable();
+
         };
 
-        inline void runOnce() {};
+        void setup( BotMesh & mesh, Scheduler & defaultScheduler )
+        {
+            // set the callbacks
+            mesh.onReceive( &_BotHelloWorld::receivedCallback );
+            
+            // add Tasks
+            defaultScheduler.addTask( _BotHelloWorld::taskBotHelloWorld );
+            _BotHelloWorld::taskBotHelloWorld.enable();
 
+            // remember mesh for future use
+            _BotHelloWorld::pMesh = &mesh;
+        };
 
     protected:
 
@@ -46,15 +50,16 @@ class BotHelloWorld
 
 };
 
-void broadcastBotHelloWorld()
+// implementation of namespace
+namespace _BotHelloWorld
 {
-    Serial.println("called BotHelloWorld()");
-    MESH.sendBroadcast( "Hello world!" );
-};
+    // callback for scheduler
+    void broadcastBotHelloWorld()
+    {
+        Serial.println("called BotHelloWorld()");
+        pMesh->sendBroadcast( "Hello world!" );
+    };
 
-// namespace to keep callbacks local
-namespace BotHelloWorldCallbacks
-{
     // callbacks for mesh
     void receivedCallback( uint32_t from, String &msg )
     {

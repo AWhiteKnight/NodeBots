@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #include "NodeBot.hpp"
-NodeBot & bot = NodeBot::getInstance();
+static NodeBot bot;
 
 void setup() {
   // serial speed is defined in platformio.ini as build-flag
