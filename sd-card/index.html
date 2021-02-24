@@ -6,14 +6,23 @@
 	<title>RoboNet - Mesh Structure</title>
 </head>
 <body>
-	<!-- drawing area for mesh structure -->
-	<svg id="robonet"></svg>
+	<!-- The Gamepad area-->
+	<div class="row" id="gamepad">
+		<div class="leftCol" id="joy1Div" style="width:200px;height:200px;margin:50px"></div>
+		<div class="centralCol">
+			<!-- drawing area for mesh structure -->
+			<div id="mesh">
+				<svg id="robonet"></svg>
+			</div>
+		</div>
+		<div class="rightCol" id="joy2Div" style="width:200px;height:200px;margin:50px"></div>
+	</div>
 	<!-- load d3js library: https://d3js.org -->
 	<script src="d3/d3.min.js"></script>
 	<!-- load d3-eclipse-force library: https://github.com/jpurma/d3-ellipse-force -->
 	<script src="d3/ellipse/ellipseForce.js"></script>
-	<!-- touch/mouse joystick -->
-	<!-- https://yoannmoi.net/nipplejs/ -->
+	<!-- touch/mouse joystick library: https://github.com/bobboteck/JoyStick -->
+	<script src="joy/joy.min.js"></script>
 	<!-- load page script -->
 	<script src="index.js"></script>
 </body>

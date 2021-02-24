@@ -11,7 +11,7 @@
 #include "std_msgs.h"
 
 #ifdef WITH_D1MINI_MOTOR_SHIELD
-    #include "../driver/d1mini_motor_shield/D1Mini_Motor.h"
+    #include "../component/d1mini_motor_shield/D1Mini_Motor.h"
 #endif
 
 // namespace to keep things local
@@ -19,8 +19,8 @@ namespace _BotChassis
 {
     BotMesh * pMesh;
 
-    #define CYCLE_TIME 10UL
-    #define WATCHDOG_TIMEOUT 15 // amount of cycles until autostop
+    #define CYCLE_TIME 20UL
+    #define WATCHDOG_TIMEOUT 11 // amount of cycles until autostop
     uint16_t watchdog = WATCHDOG_TIMEOUT; 
     
     #ifdef WITH_D1MINI_MOTOR_SHIELD

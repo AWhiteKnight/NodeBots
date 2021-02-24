@@ -10,36 +10,33 @@
 #include "secrets.h"
 
 // a specialization of painlessMesh to implement extensions
-#include "components/BotMesh.hpp"
+#include "feature/BotMesh.hpp"
+static BotMesh mesh;
 
 // to control tasks
 static Scheduler defaultScheduler;
 
-// access to mesh
-//static BotMesh & mesh = BotMesh::getInstance();
-static BotMesh mesh;
-
 #ifdef HELLO_WORLD  // should be defined as build flag in platformio.ini
-    // a simple hello world component
-    #include "components/BotHelloWorld.hpp"
+    // a simple hello world feature
+    #include "feature/BotHelloWorld.hpp"
     static BotHelloWorld hello;
 #endif
 
 #ifdef HAS_WEB_SERVER  // should be defined as build flag in platformio.ini
-    // the web server component
-    #include "components/BotWebServer.hpp"
+    // the web server feature
+    #include "feature/BotWebServer.hpp"
     static BotWebServer webServer;
 #endif
 
 #ifdef HAS_CHASSIS  // should be defined as build flag in platformio.ini
-    // the chassis component
-    #include "components/BotChassis.hpp"
+    // the chassis feature
+    #include "feature/BotChassis.hpp"
     static BotChassis chassis;
 #endif
 
 #ifdef HAS_CONTROL  // should be defined as build flag in platformio.ini
-    // the control component
-    #include "components/BotControl.hpp"
+    // the control feature
+    #include "feature/BotControl.hpp"
     static BotControl control;
 #endif
 

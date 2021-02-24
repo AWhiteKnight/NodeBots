@@ -1,9 +1,46 @@
 
 body {
 	width: 100%;
-	margin: 0px;
-	background-color: lightgrey;
+	padding: 0px;
+	background-color: rgb(175, 175, 175);
 }
+
+#gamepad {
+	width: 99%;
+	min-height: 100px;
+}
+
+.row {
+	display: inline-flex;
+	clear: both;
+}
+
+.leftCol {
+	float: left;
+}
+
+.centralCol {
+	float: left;
+	min-width: 300px;
+}
+
+.rightCol {
+	float: right;
+}
+/*
+#joystick {
+	border: 1px solid #FF0000;
+}
+/* */
+#mesh {
+	width: 99%;
+	min-height: 100px;
+}
+
+#robonet {
+	width: 99%;
+	height: 99%;
+} 
 
 .link line {
 	stroke: black;

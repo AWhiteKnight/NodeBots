@@ -157,12 +157,12 @@ namespace _BotControl
             // create JSON 
             doc["joy1"]["x"] = joy1.x; 
             doc["joy1"]["y"] = joy1.y;
-            doc["joy1"]["sw"] = joy1.sw;
+            //doc["joy1"]["sw"] = joy1.sw;
             
             // send JSON 
             String msg;
             serializeJson( doc, msg );
-            mesh.sendSingle( drive_node, msg );
+            pMesh.sendSingle( drive_node, msg );
         } 
         else
         {

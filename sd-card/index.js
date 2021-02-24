@@ -1,23 +1,97 @@
 'use strict';
+// these are the polling interval values
+const gamepadSendInterval = 100;
+const meshFetchInterval =  1000;
+
 // this is an URL for local testing
 // adopt the IP to your situation
-const myURL = 'http://192.168.0.140/api/getMeshStructure';
-const width = 800;
-const height = 600;
-const interval = 10000;
+const getMeshURL = 'http://192.168.0.140/api/getMeshStructure';
+const postMsgURL = 'http://192.168.0.140/api/postMessage';
+
+// we need to inactivate CORS
+const corsHeader = "Access-Control-Allow-Origin";
+const corsValue = "*";
+
+// definitions for the gamepad
+const gamepadBox = document.getElementById("gamepad");
+const gamepadWidth = gamepadBox.offsetWidth;
+const gamepadHeight = gamepadBox.offsetHeight;
+
+const joy1 = new JoyStick('joy1Div');
+const joy2 = new JoyStick('joy2Div');
+
+let vel, yaw, nick, roll, sum;
+let msg, target = 2731577066;
+let mode = 1;
+let send = true;
+let postMsgUrl = "/api/postMessage";
+
+// the method to post msgs
+const poster = () => {
+	if (mode == 1 || mode == 2) 
+	 	{  yaw = joy1.GetX(); roll = joy2.GetX(); }
+	else
+		{ roll = joy1.GetX();  yaw = joy2.GetX(); }
+	
+	if (mode == 1 || mode == 3) 
+		{ nick = joy1.GetY(); vel = joy2.GetY(); }
+	else
+		{  vel = joy1.GetY(); nick = joy2.GetY(); }
+	
+	msg = {
+		target: target,
+		rc_ctrl: {
+			vel: vel,
+			yaw: yaw,
+			nick: nick,
+			roll: roll
+		}
+	};
+	sum = Math.abs(vel) + Math.abs(yaw) + Math.abs(nick) + Math.abs(roll);
+
+	// if sum of values is 0 we will do a last send
+	if(send || sum != 0) {
+		(sum == 0) ? send = false : send = true;
+		fetch(postMsgUrl, {
+			method: "POST",
+			mode: 'no-cors',
+			headers: {
+				corsHeader: corsValue
+			}, 
+			body: (JSON.stringify(msg))
+		}).then(response => {
+			//console.log(response.status);
+			if(response.status == '0' || response.status == '200') {
+				setTimeout(poster, gamepadSendInterval);
+			} else if(response.status == '405' || response.status == '404') {
+				postMsgUrl = postMsgURL;
+					setTimeout(poster, gamepadSendInterval);
+			} else {
+				console.log("error");
+			}
+		});
+	}
+	else
+	{
+		send = false;
+		setTimeout(poster, gamepadSendInterval);
+	}
+};
+
+// definitions for the mesh structure
+const meshBox = document.getElementById("mesh");
+const meshWidth = meshBox.offsetWidth;
+const meshHeight = meshBox.offsetHeight;
+
+let getMeshUrl = '/api/getMeshStructure';
+let oldData;
 
 // this is the area to paint on
 const svg = d3.select("#robonet");
-svg.style('width', width);
-svg.style('height', height);
 
-let url = '/api/getMeshStructure';
-let oldData;
-/**
- * the method to fetch data
- */
+// the method to fetch mesh data
 const fetcher = () => {
-	fetch(url)
+	fetch(getMeshUrl)
 	.then(function(response) {
 		//console.log(response);
 		if(response.status == '200') {
@@ -28,18 +102,14 @@ const fetcher = () => {
 					ellipseChart(JSON.parse(text));
 					oldData = text;
 				}
-				if(interval > 0)
-					setTimeout(fetcher, interval);
+				setTimeout(fetcher, meshFetchInterval);
 			});
 		} else if(response.status == '404') {
-			url = myURL;
-			fetcher()
+			getMeshUrl = getMeshURL;
+			setTimeout(fetcher, 100);
 		}
 	});
 }
-
-fetcher();
-
 
 const ellipseChart = (data) => {
 
@@ -60,7 +130,7 @@ const ellipseChart = (data) => {
 		//.force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(1))
 		.force("link", d3.forceLink().id(d => d.data.nodeId))
 		.force("collide", ellipseForce(6, 0.5, 5))
-		.force("center", d3.forceCenter(width / 2, height / 2));
+		.force("center", d3.forceCenter(meshWidth / 2, meshHeight / 2));
 
 	const link = svg.append("g")
 		.attr("class", "link")
@@ -134,4 +204,9 @@ const drag = simulation => {
 		.on("drag", dragged)
 		.on("end", dragended);
 };
+
+// start posting commands
+poster();
+// start fetching mesh structure
+fetcher();
 
