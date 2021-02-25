@@ -25,7 +25,7 @@ namespace _BotControl
     BotMesh * pMesh;
 
     uint32_t drive_node = DRIVE_NODE;   // set with build flag!!
-    joystick joy1;
+    rc3D_t rc3D;
 
     int64_t sum_x;
     int32_t center_x;
@@ -132,37 +132,37 @@ namespace _BotControl
             digitalWrite( DEAD_MAN_LED, HIGH );
 
             // scale values of axis
-            int32_t x = 2 + ( center_x - ( sum_x / loop_counter ) ) / 19;
-            int32_t y = 2 + ( center_y - ( sum_y / loop_counter ) ) / 19;
+            int32_t x = 1 + ( center_x - ( sum_x / loop_counter ) ) / 19;
+            int32_t y = 1 + ( center_y - ( sum_y / loop_counter ) ) / 19;
             
             // limit x
             if( x < -100 )
-            joy1.x = -100;
+                rc3D[0] = -100;
             else if ( x > 100 )
-            joy1.x = 100;
+                rc3D[0] = 100;
             else
-            joy1.x = x;
+                rc3D[0] = x;
             
             //limit y
             if( y < -100 )
-            joy1.y = -100;
+                rc3D[1] = -100;
             else if ( y > 100 )
-            joy1.y = 100;
+                rc3D[1] = 100;
             else
-            joy1.y = y;
+                rc3D[1] = y;
 
-            // fetch current state of switch
-            joy1.sw = !digitalRead( JOY1_SW );  // pulldown switch
-
+            //Serial.printf( "rc3D: %d %d %d %d\n", rc3D[0], rc3D[1], rc3D[2], rc3D[3]  );
             // create JSON 
-            doc["joy1"]["x"] = joy1.x; 
-            doc["joy1"]["y"] = joy1.y;
-            //doc["joy1"]["sw"] = joy1.sw;
+            doc["rc3D"][0] = rc3D[0]; 
+            doc["rc3D"][1] = rc3D[1]; 
+            doc["rc3D"][2] = rc3D[2]; 
+            doc["rc3D"][3] = rc3D[3]; 
             
             // send JSON 
             String msg;
             serializeJson( doc, msg );
-            pMesh.sendSingle( drive_node, msg );
+            //Serial.println( msg );
+            pMesh->sendSingle( drive_node, msg );
         } 
         else
         {
@@ -173,9 +173,6 @@ namespace _BotControl
         loop_counter = 0;
         sum_x = 0;
         sum_y = 0;
-
-        // schedule next call
-        //taskSendValues.setInterval( VALUE_INTERVAL );
     }
 
     // callbacks for mesh

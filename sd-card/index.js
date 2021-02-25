@@ -22,30 +22,27 @@ const joy2 = new JoyStick('joy2Div');
 
 let vel, yaw, nick, roll, sum;
 let msg, target = 2731577066;
-let mode = 1;
+let mode = 3;
 let send = true;
 let postMsgUrl = "/api/postMessage";
 
 // the method to post msgs
 const poster = () => {
-	if (mode == 1 || mode == 2) 
-	 	{  yaw = joy1.GetX(); roll = joy2.GetX(); }
-	else
-		{ roll = joy1.GetX();  yaw = joy2.GetX(); }
+	if (mode == 1 || mode == 2) {
+		 yaw = joy1.GetX(); roll = joy2.GetX();
+	} else { 
+		roll = joy1.GetX();  yaw = joy2.GetX();
+	}
 	
-	if (mode == 1 || mode == 3) 
-		{ nick = joy1.GetY(); vel = joy2.GetY(); }
-	else
-		{  vel = joy1.GetY(); nick = joy2.GetY(); }
+	if (mode == 1 || mode == 3) {
+		 vel = joy1.GetY(); nick = joy2.GetY();
+	} else {
+		nick = joy1.GetY(); vel = joy2.GetY();
+	}
 	
 	msg = {
-		target: target,
-		rc_ctrl: {
-			vel: vel,
-			yaw: yaw,
-			nick: nick,
-			roll: roll
-		}
+		tgt: target,
+		rc3D: [ vel, yaw, nick, roll ]
 	};
 	sum = Math.abs(vel) + Math.abs(yaw) + Math.abs(nick) + Math.abs(roll);
 

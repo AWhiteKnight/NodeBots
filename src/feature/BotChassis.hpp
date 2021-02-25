@@ -46,7 +46,7 @@ namespace _BotChassis
 
     void receivedCallback( uint32_t from, String &msg );
 
-    joystick joy1;
+    rc3D_t rc3D;
     StaticJsonDocument<240> doc;  // message size < 250 which is esp-now conform
 }
 
@@ -123,22 +123,21 @@ namespace _BotChassis
         // debugging output
         //Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
         
-        // joy1 message
-        if( msg.startsWith( "{\"joy1" ) )
+        // rc3D message
+        if( msg.startsWith( "{\"rc3D" ) )
         {
             #ifdef IS_DIFF_DRIVE
                 deserializeJson(doc, msg);
-                joy1.x = doc["joy1"]["x"];
-                joy1.y = doc["joy1"]["y"];
-                joy1.sw = doc["joy1"]["sw"];
+                rc3D[0] = doc["rc3D"][0];
+                rc3D[1] = doc["rc3D"][1];
 
                 float_t scaler = 1.0f;
-                float_t tmp = abs( joy1.x ) + abs( joy1.y );
+                float_t tmp = abs( rc3D[0] ) + abs( rc3D[1] );
                 if( tmp > 100.0 ) 
                 scaler = 100.0f / tmp; 
 
-                leftMotorSpeed = scaler*(joy1.x + joy1.y);
-                rightMotorSpeed = scaler*(joy1.x - joy1.y);
+                leftMotorSpeed = scaler*(rc3D[0] + rc3D[1]);
+                rightMotorSpeed = scaler*(rc3D[0] - rc3D[1]);
             #endif
 
             // reset watchdog

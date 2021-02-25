@@ -9,32 +9,7 @@
 extern "C" {
 #endif
 
-typedef struct {
-    float_t x;
-    float_t y;
-    float_t z;
-} vec3_t;
-
-typedef struct { 
-    float_t linear;
-    float_t angular;
-} velCmd2D;
-
-typedef struct { 
-    float_t linear;
-    vec3_t angular;
-} velCmd2_5D;
-
-typedef struct { 
-    vec3_t linear;
-    vec3_t angular;
-} velCmd3D;
-
-typedef struct {
-    int8_t x;
-    int8_t y;
-    bool sw;
-} joystick;
+typedef int8_t rc3D_t[4];
 
 #ifdef __cplusplus
 }

@@ -134,32 +134,30 @@ namespace _BotWebServer
     bool handlePost(AsyncWebServerRequest *request, uint8_t *datas) {
 
         //Serial.printf("[REQUEST]\t%s\r\n", (const char *)datas);
-/*
-{"target":2731577066,"rc_ctrl":{"vel":"0","yaw":"0","nick":"0","roll":"0"}}
-*/
-        // any other message 
+
         deserializeJson(recDoc, (const char*)datas);
-        if( recDoc.containsKey( "target" ) )
+        if( recDoc.containsKey( "tgt" ) )
         {
             // create send JSON from recieved JSON 
-            uint32_t target = recDoc["target"];
-            if( recDoc.containsKey( "rc_ctrl" ) )
+            uint32_t target = recDoc["tgt"];
+            if( recDoc.containsKey( "rc3D" ) )
             {
-                sendDoc["joy1"]["x"] = recDoc["rc_ctrl"]["vel"];
-                sendDoc["joy1"]["y"] = recDoc["rc_ctrl"]["yaw"];
-
                 String msg;
+                sendDoc["rc3D"][0] = recDoc["rc3D"][0]; 
+                sendDoc["rc3D"][1] = recDoc["rc3D"][1]; 
+                sendDoc["rc3D"][2] = recDoc["rc3D"][2]; 
+                sendDoc["rc3D"][3] = recDoc["rc3D"][3]; 
                 serializeJson( sendDoc, msg );
-                pMesh->sendSingle( target, msg ); 
-            }
-            else
-            {
-                Serial.println( "Error in /api/postMessage" );
-            }
+                //Serial.println( msg );
+                pMesh->sendSingle( target, msg );
 
+                return true;
+            }
         }
 
-        return true;
+        Serial.println( "Error in /api/postMessage" );
+        Serial.println( (const char*)datas );
+        return false;
     }
 
     // callback for scheduler
