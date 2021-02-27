@@ -28,7 +28,8 @@ static AsyncWebServer server( 80 );
 // implementation below
 namespace _BotWebServer
 {
-    BotMesh * pMesh;   
+    BotMesh * pMesh;
+    const char * textType = "text/plain";
 
     // prototypes - implementation below
     bool handlePost( AsyncWebServerRequest *request, uint8_t *datas );
@@ -38,8 +39,8 @@ namespace _BotWebServer
     // Task definitions
     Task taskCheckIP( 60000UL , TASK_FOREVER, &checkIP );
 
-    StaticJsonDocument<240> recDoc;     // message size < 250 which is esp-now conform
-    StaticJsonDocument<240> sendDoc;    // message size < 250 which is esp-now conform
+    DynamicJsonDocument  recDoc(240);    // message size < 250 which is esp-now conform
+    DynamicJsonDocument sendDoc(240);    // message size < 250 which is esp-now conform
 }
 
 
@@ -70,8 +71,8 @@ class BotWebServer
                 hostname += BotMesh::getInstance().getNodeId();
             #endif
             mesh.setHostname( hostname.c_str() );
-            Serial.println( "My Hostname is " + hostname );
-            Serial.println( "My AP IP is " + mesh.getAPIP().toString() );
+            Serial.println( "Hostname is " + hostname );
+            Serial.println( "AP IP is " + mesh.getAPIP().toString() );
 
             // add Tasks
             defaultScheduler.addTask( _BotWebServer::taskCheckIP );
@@ -83,7 +84,7 @@ class BotWebServer
 
         void startWebServer()
         {
-            Serial.println( "starting WebServer" );
+            //Serial.println( "starting WebServer" );
             // webserver routes from specialized to general!
 
             // api call to mesh structure, possible without sd-card
@@ -111,8 +112,10 @@ class BotWebServer
                 {
                     if (request->url() == "/api/postMessage")
                     {
-                        if (!_BotWebServer::handlePost(request, data)) request->send(200, "text/plain", "false");
-                        request->send(200, "text/plain", "true");
+                        if ( !_BotWebServer::handlePost(request, data) ) 
+                            request->send(200, _BotWebServer::textType, "false");
+                        else
+                            request->send(200, _BotWebServer::textType, "true");
                     }
                 }
             );
@@ -135,24 +138,22 @@ namespace _BotWebServer
 
         //Serial.printf("[REQUEST]\t%s\r\n", (const char *)datas);
 
+        // forward message to target(s)
         deserializeJson(recDoc, (const char*)datas);
-        if( recDoc.containsKey( "tgt" ) )
-        {
-            // create send JSON from recieved JSON 
-            uint32_t target = recDoc["tgt"];
-            if( recDoc.containsKey( "rc3D" ) )
-            {
-                String msg;
-                sendDoc["rc3D"][0] = recDoc["rc3D"][0]; 
-                sendDoc["rc3D"][1] = recDoc["rc3D"][1]; 
-                sendDoc["rc3D"][2] = recDoc["rc3D"][2]; 
-                sendDoc["rc3D"][3] = recDoc["rc3D"][3]; 
-                serializeJson( sendDoc, msg );
-                //Serial.println( msg );
-                pMesh->sendSingle( target, msg );
+        String target = recDoc["tgt"];
 
-                return true;
-            }
+        String msg;
+        serializeJson( recDoc, msg );
+        if(target == "broadcast")
+        {
+            pMesh->sendBroadcast( msg );
+            return true;
+        }
+        else if(target != "")
+        {
+            uint32_t tgt = recDoc["tgt"];
+            pMesh->sendSingle( tgt, msg );
+            return true;
         }
 
         Serial.println( "Error in /api/postMessage" );
@@ -165,7 +166,7 @@ namespace _BotWebServer
     {
         if(pMesh->getStationIP())
         {
-            Serial.println( "WebServer IP is " + pMesh->getStationIP().toString() );
+            Serial.println( "STA IP is " + pMesh->getStationIP().toString() );
             taskCheckIP.disable();
             //taskCheckIP.remove();
         }

@@ -16,6 +16,15 @@ static BotMesh mesh;
 // to control tasks
 static Scheduler defaultScheduler;
 
+#ifdef WITH_RTC_PCF8523 // should be defined as build flag in platformio.ini
+    #include "RTClib.h"
+    RTC_PCF8523 rtc;
+#endif
+
+#ifdef WITH_SD_CARD // should be defined as build flag in platformio.ini
+
+#endif
+
 #ifdef HELLO_WORLD  // should be defined as build flag in platformio.ini
     // a simple hello world feature
     #include "feature/BotHelloWorld.hpp"
@@ -59,17 +68,16 @@ class NodeBot
         };
 
         void setup() {
-            Serial.println("bot setup begin");
+            //Serial.println("bot setup begin");
 
-            //ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE
+            //ERROR | STARTUP | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE
             mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
 
             // Create mesh object with mode WIFI_AP_STA = Station and AccessPoint 
             mesh.init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
 
-            //#if defined(IS_ROOT) || defined(HAS_WEB_SERVER)
-            #ifdef IS_ROOT
-                // as the name implies: this is the root. There should only be one!
+            // as the name implies: this will be a root. There should only be one!
+            #ifdef IS_MESH_ROOT
                 mesh.setRoot( true );
             #endif
 
@@ -81,6 +89,17 @@ class NodeBot
             // enable OTA if a role is defined (should be done as build flag)
             #ifdef OTA_ROLE
                 mesh.initOTAReceive( OTA_ROLE );
+            #endif
+
+            #ifdef WITH_RTC
+                rtc.begin();
+                // adjust time from compiletime if not already set
+                if ( !rtc.initialized() || rtc.lostPower() )
+                {
+                    rtc.adjust( DateTime( F( __DATE__ ), F( __TIME__ ) ) );
+                    Serial.println( "Time adjusted" );
+                }
+                rtc.start();
             #endif
 
             mesh.onNewConnection( &_NodeBot::newConnectionCallback );
@@ -108,7 +127,15 @@ class NodeBot
                 webServer.startWebServer();
             #endif
 
-            Serial.println("bot setup end");
+            #ifdef WITH_RTC
+                DateTime now = rtc.now();
+                Serial.print(" since 2000 = ");
+                Serial.print(now.unixtime());
+                Serial.print("s = ");
+                Serial.print(now.unixtime() / 86400L);
+                Serial.println("d");
+            #endif
+            //Serial.println("bot setup end");
         };
 
         void update()

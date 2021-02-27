@@ -121,34 +121,41 @@ namespace _BotChassis
     void receivedCallback( uint32_t from, String &msg )
     {
         // debugging output
-        //Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
+        Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
         
-        // rc3D message
-        if( msg.startsWith( "{\"rc3D" ) )
+        deserializeJson(doc, msg);
+
+        // message for me?
+        String target = doc["tgt"];
+        String me(pMesh->getNodeId());
+        if( target == me || target == "broadcast" )
         {
-            #ifdef IS_DIFF_DRIVE
-                deserializeJson(doc, msg);
-                rc3D[0] = doc["rc3D"][0];
-                rc3D[1] = doc["rc3D"][1];
+            // rc3D message?
+            if(doc.containsKey( "rc3D" ))
+            {
+                #ifdef IS_DIFF_DRIVE
+                    rc3D[0] = doc["rc3D"][0];
+                    rc3D[1] = doc["rc3D"][1];
 
-                float_t scaler = 1.0f;
-                float_t tmp = abs( rc3D[0] ) + abs( rc3D[1] );
-                if( tmp > 100.0 ) 
-                scaler = 100.0f / tmp; 
+                    float_t scaler = 1.0f;
+                    float_t tmp = abs( rc3D[0] ) + abs( rc3D[1] );
+                    if( tmp > 100.0 ) 
+                    scaler = 100.0f / tmp; 
 
-                leftMotorSpeed = scaler*(rc3D[0] + rc3D[1]);
-                rightMotorSpeed = scaler*(rc3D[0] - rc3D[1]);
-            #endif
+                    leftMotorSpeed = scaler*(rc3D[0] + rc3D[1]);
+                    rightMotorSpeed = scaler*(rc3D[0] - rc3D[1]);
+                #endif
 
-            // reset watchdog
-            watchdog = WATCHDOG_TIMEOUT;
-            // debugging output
-            //Serial.printf( "=> left: %f, right: %f\n", leftMotorSpeed, rightMotorSpeed );
-        }
-        // any other message 
-        else
-        {
-            ;
+                // reset watchdog
+                watchdog = WATCHDOG_TIMEOUT;
+                // debugging output
+                //Serial.printf( "=> left: %f, right: %f\n", leftMotorSpeed, rightMotorSpeed );
+            }
+            // any other message 
+            else
+            {
+                ;
+            }
         }
     };
 }

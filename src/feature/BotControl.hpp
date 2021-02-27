@@ -152,7 +152,9 @@ namespace _BotControl
                 rc3D[1] = y;
 
             //Serial.printf( "rc3D: %d %d %d %d\n", rc3D[0], rc3D[1], rc3D[2], rc3D[3]  );
-            // create JSON 
+            // create JSON
+            String target(drive_node);
+            doc["tgt"] = target;
             doc["rc3D"][0] = rc3D[0]; 
             doc["rc3D"][1] = rc3D[1]; 
             doc["rc3D"][2] = rc3D[2]; 
