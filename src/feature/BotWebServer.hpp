@@ -33,6 +33,9 @@ namespace _BotWebServer
 
     // prototypes - implementation below
     bool handlePost( AsyncWebServerRequest *request, uint8_t *datas );
+    #ifdef WITH_SD_CARD
+        bool sendFromSdCard( AsyncWebServerRequest *request, String path );
+    #endif
     void checkIP();
     void receivedCallback( uint32_t from, String &msg );
 
@@ -120,6 +123,24 @@ class BotWebServer
                 }
             );
 
+            #ifdef WITH_SD_CARD
+            server.on( 
+                "/*",
+                HTTP_GET,
+                []( AsyncWebServerRequest *request )
+                {
+                    if( SD.begin( CHIP_SELECT) )
+                    {
+                        _BotWebServer::sendFromSdCard( request, request->url() );
+                    }
+                    else
+                    {
+                        request->send(404, defaultMimeType, "Not found");
+                    }
+                }
+            );
+            #endif
+
             // start web server
             server.begin();
         };
@@ -160,6 +181,38 @@ namespace _BotWebServer
         Serial.println( (const char*)datas );
         return false;
     }
+
+    #ifdef WITH_SD_CARD
+        bool sendFromSdCard( AsyncWebServerRequest *request, String path )
+        {
+            String dataType = defaultMimeType;    // default MIME type
+            if(path.equals("/"))
+            {
+                path += "index.html";
+            } 
+            else
+            {
+                if(path.endsWith(".ico")) dataType = "image/ico";
+                else if( path.endsWith( ".css" ) ) dataType = "text/css";  
+                else if( path.endsWith( ".js" ) ) dataType = "text/javascript";  
+                else if( path.endsWith( ".jpg" ) ) dataType = "image/jpeg";
+                else if( path.endsWith( ".txt" ) ) dataType = "text/plain";
+            }
+
+            File dataFile = SD.open(path.c_str());
+            if (!dataFile)
+            {
+                Serial.println("File not found");
+                request->send(404, defaultMimeType, "Not found");
+                return false;
+            }
+
+            AsyncWebServerResponse * response = request->beginResponse( dataFile, path, dataType );
+            request->send(response);
+
+            return true;
+        }
+    #endif
 
     // callback for scheduler
     void checkIP()

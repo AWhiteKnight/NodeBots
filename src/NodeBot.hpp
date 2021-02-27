@@ -22,7 +22,9 @@ static Scheduler defaultScheduler;
 #endif
 
 #ifdef WITH_SD_CARD // should be defined as build flag in platformio.ini
-
+    #include <FS.h>
+    #include <SD.h>
+    #include <SPI.h>
 #endif
 
 #ifdef HELLO_WORLD  // should be defined as build flag in platformio.ini
