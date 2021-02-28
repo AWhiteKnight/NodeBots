@@ -8,12 +8,12 @@
 static NodeBot bot;
 
 void setup() {
-  // serial speed is defined in platformio.ini as build-flag
-  Serial.begin( SERIAL_SPEED );
-  // setup of the bot
-  bot.setup();
+    // serial speed is defined in platformio.ini as build-flag
+    Serial.begin( SERIAL_SPEED );
+    // setup of the bot
+    bot.setup();
 }
 
 void loop() {
-  bot.update();
+    bot.update();
 }

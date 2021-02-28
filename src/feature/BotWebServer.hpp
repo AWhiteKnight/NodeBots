@@ -121,21 +121,21 @@ class BotWebServer
             );
 
             #ifdef WITH_SD_CARD
-            server.on( 
-                "/*",
-                HTTP_GET,
-                []( AsyncWebServerRequest *request )
-                {
-                    if( SD.begin( CHIP_SELECT) )
+                server.on( 
+                    "/*",
+                    HTTP_GET,
+                    []( AsyncWebServerRequest *request )
                     {
-                        _BotWebServer::sendFromSdCard( request, request->url() );
+                        if( SD.begin( CHIP_SELECT) )
+                        {
+                            _BotWebServer::sendFromSdCard( request, request->url() );
+                        }
+                        else
+                        {
+                            request->send(404, defaultMimeType, "Not found");
+                        }
                     }
-                    else
-                    {
-                        request->send(404, defaultMimeType, "Not found");
-                    }
-                }
-            );
+                );
             #endif
 
             // start web server
