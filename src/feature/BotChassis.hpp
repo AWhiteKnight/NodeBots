@@ -11,7 +11,7 @@
 #include "std_msgs.h"
 
 #ifdef WITH_D1MINI_MOTOR_SHIELD
-    #include "../component/d1mini_motor_shield/D1Mini_Motor.h"
+    #include "../component/d1mini/D1Mini_Motor_Shield.h"
 #endif
 
 // namespace to keep things local
@@ -121,7 +121,7 @@ namespace _BotChassis
     void receivedCallback( uint32_t from, String &msg )
     {
         // debugging output
-        Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
+        //Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
         
         deserializeJson(doc, msg);
 
@@ -136,14 +136,14 @@ namespace _BotChassis
                 #ifdef IS_DIFF_DRIVE
                     rc3D[0] = doc["rc3D"][0];
                     rc3D[1] = doc["rc3D"][1];
+                    // use only half of speed for turning
+                    rc3D[1] = rc3D[1] / 2;
 
-                    float_t scaler = 1.0f;
-                    float_t tmp = abs( rc3D[0] ) + abs( rc3D[1] );
-                    if( tmp > 100.0 ) 
-                    scaler = 100.0f / tmp; 
+                    float_t tmp = ( abs( rc3D[0] ) + abs( rc3D[1] ) );
+                    float_t scaler = ( tmp > 100.0 ) ? ( 100.0f / tmp ) : 1.0f;
 
-                    leftMotorSpeed = scaler*(rc3D[0] + rc3D[1]);
-                    rightMotorSpeed = scaler*(rc3D[0] - rc3D[1]);
+                    leftMotorSpeed  = scaler * ( rc3D[0] + rc3D[1] );
+                    rightMotorSpeed = scaler * ( rc3D[0] - rc3D[1] );
                 #endif
 
                 // reset watchdog

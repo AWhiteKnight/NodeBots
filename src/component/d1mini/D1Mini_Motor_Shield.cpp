@@ -1,4 +1,4 @@
-#include "D1Mini_Motor.h"
+#include "D1Mini_Motor_Shield.h"
 
 /** 
  * Motor() -- initialize Motor

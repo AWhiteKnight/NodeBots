@@ -1,14 +1,8 @@
-#ifndef _D1MINI_MOTOR_H
-#define _D1MINI_MOTOR_H
+#ifndef _D1MINI_MOTOR_SHIELD_H_
+#define _D1MINI_MOTOR_SHIELD_H_
 
-
-#if ARDUINO >= 100
-	#include "Arduino.h"
-#else
-	#include "WProgram.h"
-#endif
-
-#include "Wire.h"
+#include <Arduino.h>
+#include <Wire.h>
 
 #define _MOTOR_A 0
 #define _MOTOR_B 1
@@ -35,4 +29,4 @@ private:
 	uint8_t _STBY_IO;
 };
 
-#endif // _D1MINI_MOTOR_H
+#endif

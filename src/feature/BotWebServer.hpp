@@ -41,9 +41,6 @@ namespace _BotWebServer
 
     // Task definitions
     Task taskCheckIP( 60000UL , TASK_FOREVER, &checkIP );
-
-    DynamicJsonDocument  recDoc(240);    // message size < 250 which is esp-now conform
-    DynamicJsonDocument sendDoc(240);    // message size < 250 which is esp-now conform
 }
 
 
@@ -116,7 +113,7 @@ class BotWebServer
                     if (request->url() == "/api/postMessage")
                     {
                         if ( !_BotWebServer::handlePost(request, data) ) 
-                            request->send(200, _BotWebServer::textType, "false");
+                            request->send(400, _BotWebServer::textType, "false");
                         else
                             request->send(200, _BotWebServer::textType, "true");
                     }
@@ -156,6 +153,8 @@ namespace _BotWebServer
 {
     // handler for web server
     bool handlePost(AsyncWebServerRequest *request, uint8_t *datas) {
+        // we need it that way to enable multiple clients at the same time
+        DynamicJsonDocument recDoc(240);    // message size < 250 which is esp-now conform
 
         //Serial.printf("[REQUEST]\t%s\r\n", (const char *)datas);
 
