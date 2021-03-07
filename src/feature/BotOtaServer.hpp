@@ -52,15 +52,15 @@ class BotOtaServer
 
         void setup( BotMesh & mesh, Scheduler & defaultScheduler )
         {
+            // remember mesh for future use
+            _BotOtaServer::pMesh = &mesh;
+
             // set the callbacks
             mesh.onReceive( &_BotOtaServer::receivedCallback );
             
             // add Tasks
             defaultScheduler.addTask( _BotOtaServer::taskCheckForUpdates );
             _BotOtaServer::taskCheckForUpdates.enableDelayed( OTA_START_DELAY );
-
-            // remember mesh for future use
-            _BotOtaServer::pMesh = &mesh;
         };
 
     protected:

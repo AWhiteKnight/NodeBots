@@ -59,6 +59,9 @@ class BotControl
 
         void setup( BotMesh & mesh, Scheduler & defaultScheduler )
         {
+            // remember mesh for future use
+            _BotControl::pMesh = &mesh;
+
             #ifdef ESP32
                 // configure pins
                 pinMode( JOY1_SW, INPUT );
@@ -77,8 +80,6 @@ class BotControl
 
             // calibrate sticks
             _BotControl::calibrateSticks();
-            // remember mesh for future use
-            _BotControl::pMesh = &mesh;
         };
 
     protected:

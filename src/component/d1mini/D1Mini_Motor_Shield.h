@@ -15,18 +15,18 @@
 
 
 class Motor {
-public:
-	Motor( uint8_t address, uint8_t motor, uint32_t freq );
-	Motor( uint8_t address, uint8_t motor, uint32_t freq, uint8_t STBY_IO );
-	void setfreq( uint32_t freq );
-	void setmotor( uint8_t dir, float pwm_val );
-	void setmotor( uint8_t dir );
+	public:
+		Motor( uint8_t address, uint8_t motor, uint32_t freq );
+		Motor( uint8_t address, uint8_t motor, uint32_t freq, uint8_t STBY_IO );
+		void setfreq( uint32_t freq );
+		void setmotor( uint8_t dir );
+		void setmotor( uint8_t dir, float pwm_val );
 
-private:
-	uint8_t _address;
-	uint8_t _motor;
-	bool _use_STBY_IO = false;
-	uint8_t _STBY_IO;
+	private:
+		uint8_t _address;
+		uint8_t _motor;
+		bool _use_STBY_IO = false;
+		uint8_t _STBY_IO;
 };
 
 #endif

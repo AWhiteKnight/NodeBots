@@ -1,8 +1,6 @@
 #ifndef _BotMesh_hpp_
 #define _BotMesh_hpp_
 
-//#define _TASK_OO_CALLBACKS
-
 /**
  * 
  */

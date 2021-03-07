@@ -21,6 +21,7 @@
 const String corsHeader = "Access-Control-Allow-Origin";
 const String corsValue = "*";
 const String defaultMimeType = "text/html";
+const String plainTextMimeType = "text/plain";
 
 static AsyncWebServer server( 80 );
 
@@ -29,7 +30,7 @@ static AsyncWebServer server( 80 );
 namespace _BotWebServer
 {
     BotMesh * pMesh;
-    const char * textType = "text/plain";
+    StaticJsonDocument<240> recDoc;    // message size < 250 which is esp-now conform
 
     // prototypes - implementation below
     bool handlePost( AsyncWebServerRequest *request, uint8_t *datas );
@@ -54,6 +55,9 @@ class BotWebServer
 
         void setup( BotMesh & mesh, Scheduler & defaultScheduler )
         {
+            // remember mesh for future use
+            _BotWebServer::pMesh = &mesh;
+
             // set the callbacks
             mesh.onReceive( &_BotWebServer::receivedCallback );
 
@@ -72,21 +76,24 @@ class BotWebServer
             #endif
             mesh.setHostname( hostname.c_str() );
             Serial.println( "Hostname is " + hostname );
-            Serial.println( "AP IP is " + mesh.getAPIP().toString() );
+
+            setRoutes();
+
+            // fire up web server
+            server.begin();
 
             // add Tasks
             defaultScheduler.addTask( _BotWebServer::taskCheckIP );
             _BotWebServer::taskCheckIP.enableDelayed(60000UL);
-
-            // remember mesh for future use
-            _BotWebServer::pMesh = &mesh;
         }
 
-        void startWebServer()
-        {
-            //Serial.println( "starting WebServer" );
-            // webserver routes from specialized to general!
 
+    protected:
+
+    private:
+        // webserver routes from specialized to general!
+        void setRoutes()
+        {
             // api call to mesh structure, possible without sd-card
             server.on
             (
@@ -113,15 +120,17 @@ class BotWebServer
                     if (request->url() == "/api/postMessage")
                     {
                         if ( !_BotWebServer::handlePost(request, data) ) 
-                            request->send(400, _BotWebServer::textType, "false");
+                            request->send(400, plainTextMimeType, "false");
                         else
-                            request->send(200, _BotWebServer::textType, "true");
+                            request->send(200, plainTextMimeType, "true");
                     }
                 }
             );
 
+            // serve any file from the sd-card
             #ifdef WITH_SD_CARD
-                server.on( 
+                server.on
+                (
                     "/*",
                     HTTP_GET,
                     []( AsyncWebServerRequest *request )
@@ -137,25 +146,15 @@ class BotWebServer
                     }
                 );
             #endif
-
-            // start web server
-            server.begin();
         };
-
-    protected:
-
-    private:
-
 };
 
 // implementation of namespace
 namespace _BotWebServer
 {
     // handler for web server
+    // TODO: This crashes when multiple clients send messages!
     bool handlePost(AsyncWebServerRequest *request, uint8_t *datas) {
-        // we need it that way to enable multiple clients at the same time
-        DynamicJsonDocument recDoc(240);    // message size < 250 which is esp-now conform
-
         //Serial.printf("[REQUEST]\t%s\r\n", (const char *)datas);
 
         // forward message to target(s)
@@ -184,7 +183,7 @@ namespace _BotWebServer
     #ifdef WITH_SD_CARD
         bool sendFromSdCard( AsyncWebServerRequest *request, String path )
         {
-            String dataType = defaultMimeType;    // default MIME type
+            String dataType = defaultMimeType;
             if(path.equals("/"))
             {
                 path += "index.html";
@@ -195,7 +194,7 @@ namespace _BotWebServer
                 else if( path.endsWith( ".css" ) ) dataType = "text/css";  
                 else if( path.endsWith( ".js" ) ) dataType = "text/javascript";  
                 else if( path.endsWith( ".jpg" ) ) dataType = "image/jpeg";
-                else if( path.endsWith( ".txt" ) ) dataType = "text/plain";
+                else if( path.endsWith( ".txt" ) ) dataType = plainTextMimeType;
             }
 
             File dataFile = SD.open(path.c_str());

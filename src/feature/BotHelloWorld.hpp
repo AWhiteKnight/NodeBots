@@ -31,15 +31,15 @@ class BotHelloWorld
 
         void setup( BotMesh & mesh, Scheduler & defaultScheduler )
         {
+            // remember mesh for future use
+            _BotHelloWorld::pMesh = &mesh;
+
             // set the callbacks
             mesh.onReceive( &_BotHelloWorld::receivedCallback );
             
             // add Tasks
             defaultScheduler.addTask( _BotHelloWorld::taskBotHelloWorld );
             _BotHelloWorld::taskBotHelloWorld.enable();
-
-            // remember mesh for future use
-            _BotHelloWorld::pMesh = &mesh;
         };
 
     protected:

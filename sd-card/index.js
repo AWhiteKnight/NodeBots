@@ -21,7 +21,7 @@ const joy1 = new JoyStick('joy1Div');
 const joy2 = new JoyStick('joy2Div');
 
 let vel, yaw, nick, roll, sum;
-let msg, target = 2731577066;
+let msg, target = 0;
 let mode = 3;
 let send = true;
 let postMsgUrl = "/api/postMessage";
@@ -47,7 +47,7 @@ const poster = () => {
 	sum = Math.abs(vel) + Math.abs(yaw) + Math.abs(nick) + Math.abs(roll);
 
 	// if sum of values is 0 we will do a last send
-	if(send || sum != 0) {
+	if(target && (send || sum != 0)) {
 		(sum == 0) ? send = false : send = true;
 		fetch(postMsgUrl, {
 			method: "POST",
@@ -75,8 +75,12 @@ const poster = () => {
 	}
 };
 
+// start posting commands
+poster();
+
 // definitions for the mesh structure
 const meshBox = document.getElementById("mesh");
+const targetField = document.getElementById("selected-node");
 const meshWidth = meshBox.offsetWidth;
 const meshHeight = meshBox.offsetHeight;
 
@@ -107,6 +111,9 @@ const fetcher = () => {
 		}
 	});
 }
+
+// start fetching mesh structure
+fetcher();
 
 const ellipseChart = (data) => {
 
@@ -140,9 +147,15 @@ const ellipseChart = (data) => {
 		.selectAll("ellipse").data(nodes).join("ellipse")
 		.attr("rx", d => d.rx )
 		.attr("ry", d => d.ry )
-		.attr("fill", d => d.depth == 0 ? "#f6f" : d.data.root ? "#0ff" : "#0f0" )
+		.attr("fill", d => target == d.data.nodeId ? "#f00" : d.depth == 0 ? "#f6f" : d.data.root ? "#0ff" : "#0f0" )
 		.attr("stroke", d => d.depth == 0 ? "#f0f" : d.data.root ? "#066" :"#0f0" )
-		.call(drag(simulation));
+		.call(drag(simulation))
+		.on("click", (ev, d) => {
+			target = d.data.nodeId;
+			targetField.innerText = target;
+			node.attr("fill", d => target == d.data.nodeId ? "#f00" : d.depth == 0 ? "#f6f" : d.data.root ? "#0ff" : "#0f0" )
+			//console.log(ev.srcElement);
+		});
 
 	node.append("title")
 		.text(d => d.data.nodeId);
@@ -201,9 +214,4 @@ const drag = simulation => {
 		.on("drag", dragged)
 		.on("end", dragended);
 };
-
-// start posting commands
-poster();
-// start fetching mesh structure
-fetcher();
 

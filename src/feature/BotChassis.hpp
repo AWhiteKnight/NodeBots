@@ -60,6 +60,9 @@ class BotChassis
 
         void setup( BotMesh & mesh, Scheduler & defaultScheduler )
         {
+            // remember mesh for future use
+            _BotChassis::pMesh = &mesh;
+
             // set the callbacks
             mesh.onReceive( &_BotChassis::receivedCallback );
             
@@ -68,9 +71,6 @@ class BotChassis
                 defaultScheduler.addTask( _BotChassis::taskSetMotorSpeeds );
                 _BotChassis::taskSetMotorSpeeds.enable();
             #endif
-
-            // remember mesh for future use
-            _BotChassis::pMesh = &mesh;
         };
 
     protected:
