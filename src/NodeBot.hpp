@@ -16,6 +16,7 @@ static BotMesh mesh;
 // to control tasks
 static Scheduler defaultScheduler;
 
+// rtc stuff
 #ifdef WITH_RTC_PCF8523
     #ifndef WITH_RTC
         #define WITH_RTC
@@ -69,7 +70,7 @@ static Scheduler defaultScheduler;
     const char * ntpServer = "pool.ntp.org";
 #endif
 
-timezone tz = { 3600, 3600 };
+timezone tz = { 3600,    0 };
 timeval  tv = {    0,    0 };
 
 // namespace to keep callbacks local
@@ -106,21 +107,29 @@ class NodeBot
 
             #ifdef WITH_RTC
                 rtc.begin();
+                // adjust time from compiletime if not already set
                 #ifdef WITH_RTC_PCF8523
-                    // adjust time from compiletime if not already set
                     if ( !rtc.initialized() || rtc.lostPower() )
                     {
                         rtc.adjust( DateTime( F( __DATE__ ), F( __TIME__ ) ) );
-                        Serial.println( "Initial Time adjusted" );
+                        Serial.println( "RTC Time adjusted" );
                         rtc.start();
                     }
                 #elif defined(WITH_RTC_DS1307)
-
+                    if ( !rtc.isrunning() )
+                    {
+                        rtc.adjust( DateTime( F( __DATE__ ), F( __TIME__ ) ) );
+                        Serial.println( "RTC Time adjusted" );
+                    }
+                #else
+                    #error "unknown RTC"
                 #endif
+
+                _NodeBot::serialPrintRtcDateTime();
+
                 // set system time from rtc
                 tv.tv_sec = rtc.now().unixtime();
                 settimeofday( &tv, &tz );
-                _NodeBot::serialPrintRtcDateTime();
             #endif
             
             configTime( tz.tz_minuteswest, tz.tz_dsttime, (const char *)NULL );

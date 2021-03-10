@@ -17,6 +17,10 @@
     #define JOY1_X  32
     #define JOY1_Y  33
     #define JOY1_SW 14    // joy_sw is a pulldown!
+#elif defined(ESP8266)
+    #define DEAD_MAN_LED D8
+    #define DEAD_MAN_SW D9
+
 #endif
 
 // namespace to keep things local
@@ -67,6 +71,8 @@ class BotControl
                 pinMode( JOY1_SW, INPUT );
                 pinMode( DEAD_MAN_SW, INPUT );
                 pinMode( DEAD_MAN_LED, OUTPUT );
+            #elif defined(ESP8266)
+
             #endif
 
             // set the callbacks
@@ -101,9 +107,13 @@ namespace _BotControl
         // read some values
         for( uint16_t i = 0; i < cnt; i++ )
         {
-            // sum up sensor values
-            sum_x += analogRead( JOY1_X );
-            sum_y += analogRead( JOY1_Y );
+            #ifdef ESP32
+                // sum up sensor values
+                sum_x += analogRead( JOY1_X );
+                sum_y += analogRead( JOY1_Y );
+            #elif defined(ESP8266)
+
+            #endif
         }
         
         // calculate center values
@@ -120,8 +130,12 @@ namespace _BotControl
     {
         // sum up sensor values
         loop_counter++;
-        sum_x += analogRead( JOY1_X );
-        sum_y += analogRead( JOY1_Y );
+        #ifdef ESP32
+            sum_x += analogRead( JOY1_X );
+            sum_y += analogRead( JOY1_Y );
+        #elif defined(ESP8266)
+
+        #endif
     }
 
     void sendValues()

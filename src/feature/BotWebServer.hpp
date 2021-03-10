@@ -191,10 +191,11 @@ namespace _BotWebServer
             else
             {
                 if(path.endsWith(".ico")) dataType = "image/ico";
-                else if( path.endsWith( ".css" ) ) dataType = "text/css";  
-                else if( path.endsWith( ".js" ) ) dataType = "text/javascript";  
+                else if( path.endsWith( ".css" ) ) dataType = "text/css";
+                else if( path.endsWith( ".js" ) ) dataType = "application/javascript";
                 else if( path.endsWith( ".jpg" ) ) dataType = "image/jpeg";
                 else if( path.endsWith( ".txt" ) ) dataType = plainTextMimeType;
+                else if( path.endsWith( ".json" ) ) dataType = "application/json";
             }
 
             File dataFile = SD.open(path.c_str());
