@@ -5,6 +5,7 @@
  * 
  */
 #include <Arduino.h>
+#include "logging.h"
 
 #include "BotMesh.hpp"
 
@@ -142,10 +143,10 @@ namespace _BotOtaServer
     void checkForUpdates()
     {
         #ifdef WITH_SD_CARD
-            Serial.println( "Checking for Updates ..." );
+            SERIAL_PRINTLN( "Checking for Updates ..." );
             if( SD.begin( CHIP_SELECT) )
             {
-                Serial.println( "SD-Card found!" );
+                SERIAL_PRINTLN( "SD-Card found!" );
                 // check for new updates in OtaFiles directory
                 dir = SD.open( "/OtaFiles/" );
                 entry = dir.openNextFile();
@@ -160,7 +161,9 @@ namespace _BotOtaServer
                         // test for firmware and get components of name
                         if( isFirmware( &fw ) )
                         {
-                            Serial.printf( "OTA FIRMWARE FOUND: %s, %s\n", fw.hardware.c_str(), fw.role.c_str() );
+                            SERIAL_PRINT( "OTA FIRMWARE FOUND: " );
+                            SERIAL_PRINT( fw.hardware.c_str() );
+                            SERIAL_PRINTLN( fw.role.c_str() );
                             sendFirmware( &fw );
                             // right now bail out after sending first update
                             return;
@@ -175,7 +178,10 @@ namespace _BotOtaServer
     // callbacks for mesh
     void receivedCallback( uint32_t from, String &msg )
     {
-        Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
+        SERIAL_PRINT( "Received from " );
+        SERIAL_PRINT( from );
+        SERIAL_PRINT( "msg=" );
+        SERIAL_PRINTLN( msg.c_str() );
     };
 }
 

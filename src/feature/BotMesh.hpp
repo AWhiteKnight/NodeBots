@@ -5,6 +5,7 @@
  * 
  */
 #include <Arduino.h>
+#include "logging.h"
 
 #include <painlessMesh.h>
 using namespace painlessmesh;

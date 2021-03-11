@@ -5,6 +5,7 @@
  * 
  */
 #include <Arduino.h>
+#include "logging.h"
 
 #include "BotMesh.hpp"
 
@@ -54,15 +55,18 @@ namespace _BotHelloWorld
     // callback for scheduler
     void broadcastBotHelloWorld()
     {
-        Serial.println("called BotHelloWorld()");
+        SERIAL_PRINTLN( "called BotHelloWorld()" );
         pMesh->sendBroadcast( "Hello world!" );
-    };
+    }
 
     // callbacks for mesh
     void receivedCallback( uint32_t from, String &msg )
     {
-        Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
-    };
+        SERIAL_PRINT( "Received from " );
+        SERIAL_PRINT( from );
+        SERIAL_PRINT( "msg=" );
+        SERIAL_PRINTLN( msg.c_str() );
+    }
 }
 
 #endif

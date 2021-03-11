@@ -5,6 +5,8 @@
  * 
  */
 #include <Arduino.h>
+#include "logging.h"
+
 #include <Wire.h>
 
 #include "BotMesh.hpp"
@@ -86,8 +88,10 @@ namespace _BotChassis
     #ifdef IS_DIFF_DRIVE
         void setMotorSpeeds()
         {
-            // debugging output
-            //Serial.printf( "Setting speeds: left=%d right=%d\n", leftMotorSpeed, rightMotorSpeed );
+            SERIAL_PRINT( "Setting speeds: left=" );
+            SERIAL_PRINT( leftMotorSpeed );
+            SERIAL_PRINT( " right=" );
+            SERIAL_PRINTLN( rightMotorSpeed );
 
             // got new command within timeout
             if( watchdog > 0 )
@@ -121,8 +125,10 @@ namespace _BotChassis
     // callbacks for mesh
     void receivedCallback( uint32_t from, String &msg )
     {
-        // debugging output
-        //Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
+        SERIAL_PRINT( "Received from " );
+        SERIAL_PRINT( from );
+        SERIAL_PRINT( "msg=" );
+        SERIAL_PRINTLN( msg.c_str() );
         
         deserializeJson(doc, msg);
 
@@ -149,8 +155,11 @@ namespace _BotChassis
 
                 // reset watchdog
                 watchdog = WATCHDOG_TIMEOUT;
-                // debugging output
                 //Serial.printf( "=> left: %f, right: %f\n", leftMotorSpeed, rightMotorSpeed );
+                SERIAL_PRINT( "=> left: " );
+                SERIAL_PRINT( leftMotorSpeed );
+                SERIAL_PRINT( " right: " );
+                SERIAL_PRINTLN( rightMotorSpeed );
             }
             // any other message 
             else

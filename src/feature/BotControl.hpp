@@ -5,6 +5,7 @@
  * 
  */
 #include <Arduino.h>
+#include "logging.h"
 
 #include "BotMesh.hpp"
 
@@ -166,7 +167,12 @@ namespace _BotControl
             else
                 rc3D[1] = y;
 
-            //Serial.printf( "rc3D: %d %d %d %d\n", rc3D[0], rc3D[1], rc3D[2], rc3D[3]  );
+            SERIAL_PRINT( "rc3D: " );
+            SERIAL_PRINT( rc3D[0] );
+            SERIAL_PRINT( rc3D[1] );
+            SERIAL_PRINT( rc3D[2] );
+            SERIAL_PRINTLN( rc3D[3] );
+
             // create JSON
             String target(drive_node);
             doc["tgt"] = target;
@@ -195,7 +201,10 @@ namespace _BotControl
     // callbacks for mesh
     void receivedCallback( uint32_t from, String &msg )
     {
-        Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
+        SERIAL_PRINT( "Received from " );
+        SERIAL_PRINT( from );
+        SERIAL_PRINT( "msg=" );
+        SERIAL_PRINTLN( msg.c_str() );
     };
 }
 

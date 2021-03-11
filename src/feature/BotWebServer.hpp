@@ -5,6 +5,7 @@
  * 
  */
 #include <Arduino.h>
+#include "logging.h"
 
 #include "BotMesh.hpp"
 
@@ -75,7 +76,8 @@ class BotWebServer
                 hostname += BotMesh::getInstance().getNodeId();
             #endif
             mesh.setHostname( hostname.c_str() );
-            Serial.println( "Hostname is " + hostname );
+            SERIAL_PRINT( "Hostname is " );
+            SERIAL_PRINTLN( hostname );
 
             setRoutes();
 
@@ -155,7 +157,8 @@ namespace _BotWebServer
     // handler for web server
     // TODO: This crashes when multiple clients send messages!
     bool handlePost(AsyncWebServerRequest *request, uint8_t *datas) {
-        //Serial.printf("[REQUEST]\t%s\r\n", (const char *)datas);
+        SERIAL_PRINT( " REQUEST: ");
+        SERIAL_PRINTLN( (const char *)datas );
 
         // forward message to target(s)
         deserializeJson(recDoc, (const char*)datas);
@@ -175,8 +178,8 @@ namespace _BotWebServer
             return true;
         }
 
-        Serial.println( "Error in /api/postMessage" );
-        Serial.println( (const char*)datas );
+        SERIAL_PRINTLN( "Error in /api/postMessage:" );
+        SERIAL_PRINTLN( (const char*)datas );
         return false;
     }
 
@@ -201,7 +204,7 @@ namespace _BotWebServer
             File dataFile = SD.open(path.c_str());
             if (!dataFile)
             {
-                Serial.println("File not found");
+                SERIAL_PRINTLN( "File not found" );
                 request->send(404, defaultMimeType, "Not found");
                 return false;
             }
@@ -218,17 +221,21 @@ namespace _BotWebServer
     {
         if(pMesh->getStationIP())
         {
-            Serial.println( "STA IP is " + pMesh->getStationIP().toString() );
+            SERIAL_PRINT( "STA IP is " );
+            SERIAL_PRINTLN( pMesh->getStationIP().toString() );
             taskCheckIP.disable();
             //taskCheckIP.remove();
         }
-    };
+    }
 
     // callbacks for mesh
     void receivedCallback( uint32_t from, String &msg )
     {
-        Serial.printf( "Received from %u msg=%s\n", from, msg.c_str() );
-    };
+        SERIAL_PRINT( "Received from " );
+        SERIAL_PRINT( from );
+        SERIAL_PRINT( "msg=" );
+        SERIAL_PRINTLN( msg.c_str() );
+    }
 }
 
 #endif

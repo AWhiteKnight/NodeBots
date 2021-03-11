@@ -5,6 +5,7 @@
  * 
  */
 #include <Arduino.h>
+#include "logging.h"
 
 // defines for the MESH SSID etc. to use
 #include "secrets.h"
@@ -87,8 +88,10 @@ namespace _NodeBot
     void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay );
 
     // Task definitions
-    void serialPrint();
-    Task taskSerialPrint( 1000UL * 60UL * 10UL, TASK_FOREVER, &serialPrint );
+    #ifdef SERIAL_DEBUG
+        void serialPrint();
+        Task taskSerialPrint( 1000UL * 60UL * 10UL, TASK_FOREVER, &serialPrint );
+    #endif
     #ifdef HAS_INTERNET_ACCESS
         void getNtpTime();
         Task taskGetNtpTime( 1000UL * 3600UL * 24UL * 5UL, TASK_FOREVER, &getNtpTime );
@@ -105,7 +108,7 @@ class NodeBot
 
         void setup()
         {
-            //Serial.println("bot setup begin");
+            SERIAL_PRINTLN("bot setup begin");
 
             // set timezone values
             configTime(tz.tz_minuteswest, tz.tz_dsttime, nullptr );
@@ -122,24 +125,26 @@ class NodeBot
                 #endif
                 {
                     rtc.adjust( DateTime( F( __DATE__ ), F( __TIME__ ) ) );
-                    Serial.println( "RTC Time adjusted" );
+                    SERIAL_PRINTLN( "RTC Time adjusted" );
                     #ifdef WITH_RTC_PCF8523
                         rtc.start();
                     #endif
                 }
-
-                _NodeBot::serialPrintRtcDateTime();
-
+                #ifdef SERIAL_DEBUG
+                    _NodeBot::serialPrintRtcDateTime();
+                #endif
                 // set system time from rtc
                 tv.tv_sec = rtc.now().unixtime();
                 settimeofday( &tv, &tz );
             #endif
-            
-            _NodeBot::serialPrintDateTime();
-
+            #ifdef SERIAL_DEBUG
+                _NodeBot::serialPrintDateTime();
+            #endif
             // set before init() so that you can see startup messages
             // ERROR | STARTUP | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE
-            mesh.setDebugMsgTypes( ERROR );
+            #ifdef SERIAL_DEBUG
+                mesh.setDebugMsgTypes( ERROR );
+            #endif
 
             // Create mesh object with mode WIFI_AP_STA = Station and AccessPoint 
             mesh.init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
@@ -161,7 +166,7 @@ class NodeBot
 
             mesh.onNewConnection( &_NodeBot::newConnectionCallback );
             mesh.onChangedConnections( &_NodeBot::changedConnectionCallback );
-            //mesh.onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
+            mesh.onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
             mesh.onNodeDelayReceived( &_NodeBot::nodeDelayReceivedCallback );
 
             #ifdef HELLO_WORLD
@@ -181,16 +186,18 @@ class NodeBot
             #endif
 
             // add Tasks
-            defaultScheduler.addTask( _NodeBot::taskSerialPrint );
-            _NodeBot::taskSerialPrint.enableDelayed( 30000UL );
+            #ifdef SERIAL_DEBUG
+                defaultScheduler.addTask( _NodeBot::taskSerialPrint );
+                _NodeBot::taskSerialPrint.enableDelayed( 30000UL );
+            #endif
             #ifdef HAS_INTERNET_ACCESS
                 defaultScheduler.addTask( _NodeBot::taskGetNtpTime );
-                _NodeBot::taskGetNtpTime.enableDelayed( 120000UL );
+                _NodeBot::taskGetNtpTime.enableDelayed( 90000UL );
             #endif
 
-            Serial.println( "MESH IP is " + mesh.getAPIP().toString() );
+            SERIAL_PRINTLN( "MESH IP is " + mesh.getAPIP().toString() );
 
-            //Serial.println("bot setup end");
+            SERIAL_PRINTLN("bot setup end");
         };
 
         void update()
@@ -207,20 +214,22 @@ class NodeBot
 // namespace to keep callbacks local
 namespace _NodeBot
 {
-    size_t _print( struct tm * timeinfo, const char * format )
-    {
-        char buf[64];
-        size_t written = strftime( buf, 63, format, timeinfo );
-        if(written == 0)  return written;
-        return Serial.print(buf);
-    }
+    #ifdef SERIAL_DEBUG
+        size_t _print( struct tm * timeinfo, const char * format )
+        {
+            char buf[64];
+            size_t written = strftime( buf, 63, format, timeinfo );
+            if(written == 0)  return written;
+            return Serial.print(buf);
+        }
 
-    size_t _println( struct tm * timeinfo, const char * format )
-    {
-        size_t n = _print( timeinfo, format );
-        n += Serial.println();
-        return n;
-    }
+        size_t _println( struct tm * timeinfo, const char * format )
+        {
+            size_t n = _print( timeinfo, format );
+            n += Serial.println();
+            return n;
+        }
+    #endif
 
     bool _getLocalTime( struct tm * info, uint32_t ms = 5000 )
     {
@@ -236,81 +245,94 @@ namespace _NodeBot
         return false;
     }
 
-    void serialPrintDateTime()
-    {
-        // set system time from rtc
-        #ifdef WITH_RTC
-            Serial.println( rtc.now().unixtime() );
-            tv.tv_sec = rtc.now().unixtime();
-            settimeofday( &tv, &tz );
-        #endif
-        struct tm timeinfo;
-        _getLocalTime( &timeinfo );
-        _println( &timeinfo, "%A, %B %d %Y %H:%M:%S" );
-    }
-
-    #ifdef WITH_RTC
-        void serialPrintRtcDateTime()
+    #ifdef SERIAL_DEBUG
+        void serialPrintDateTime()
         {
-            Serial.print("RTC: ");
-
-            DateTime now = rtc.now();
-        
-            Serial.print(now.year(), DEC);
-            Serial.print('-');
-            Serial.print(now.month(), DEC);
-            Serial.print('-');
-            Serial.print(now.day(), DEC);
-            Serial.print(' ');
-            Serial.print(now.hour(), DEC);
-            Serial.print(':');
-            Serial.print(now.minute(), DEC);
-            Serial.print(':');
-            Serial.print(now.second(), DEC);
-            Serial.println();
-        }
-    #endif
-
-    void serialPrint()
-    {
-        #ifdef WITH_RTC
-            serialPrintRtcDateTime();
-        #endif
-        serialPrintDateTime();
-    }
-
-    #ifdef HAS_INTERNET_ACCESS
-        void getNtpTime()
-        {
-            Serial.println("NTP-Request");
-            // update time from ntp server
-            configTime(tz.tz_minuteswest, tz.tz_dsttime, ntpServer);
+            // set system time from rtc
             #ifdef WITH_RTC
-                rtc.adjust( DateTime( time( nullptr ) ) );
+                Serial.println( rtc.now().unixtime() );
+                tv.tv_sec = rtc.now().unixtime();
+                settimeofday( &tv, &tz );
+            #endif
+            struct tm timeinfo;
+            _getLocalTime( &timeinfo );
+            _println( &timeinfo, "%A, %B %d %Y %H:%M:%S" );
+        }
+
+        #ifdef WITH_RTC
+            void serialPrintRtcDateTime()
+            {
+                Serial.print("RTC: ");
+
+                DateTime now = rtc.now();
+            
+                Serial.print(now.year(), DEC);
+                Serial.print('-');
+                Serial.print(now.month(), DEC);
+                Serial.print('-');
+                Serial.print(now.day(), DEC);
+                Serial.print(' ');
+                Serial.print(now.hour(), DEC);
+                Serial.print(':');
+                Serial.print(now.minute(), DEC);
+                Serial.print(':');
+                Serial.print(now.second(), DEC);
+                Serial.println();
+            }
+        #endif
+
+        void serialPrint()
+        {
+            #ifdef WITH_RTC
                 serialPrintRtcDateTime();
             #endif
             serialPrintDateTime();
         }
     #endif
 
+    #ifdef HAS_INTERNET_ACCESS
+        void getNtpTime()
+        {
+            SERIAL_PRINTLN( "NTP-Request" );
+            // update time from ntp server
+            configTime(tz.tz_minuteswest, tz.tz_dsttime, ntpServer);
+            #ifdef WITH_RTC
+                rtc.adjust( DateTime( time( nullptr ) ) );
+                #ifdef SERIAL_DEBUG
+                    serialPrintRtcDateTime();
+                #endif
+            #endif
+            #ifdef SERIAL_DEBUG
+                serialPrintDateTime();
+            #endif
+        }
+    #endif
+
     void newConnectionCallback( uint32_t nodeId )
     {
-        Serial.printf( "New Connection, nodeId = %u\n", nodeId );
+        SERIAL_PRINT( "New Connection, nodeId = " );
+        SERIAL_PRINTLN( nodeId );
     };
 
     void changedConnectionCallback()
     {
-        Serial.printf( "Changed Connections\n" );
+        SERIAL_PRINTLN( "Changed Connections" );
     };
 
     void nodeTimeAdjustedCallback( int32_t offset )
     {
-        Serial.printf( "Adjusted time %u. Offset = %d\n", mesh.getNodeTime(), offset) ;
+        SERIAL_PRINT( "Adjusted time " );
+        SERIAL_PRINT( mesh.getNodeTime() )
+        SERIAL_PRINT( " Offset = " );
+        SERIAL_PRINTLN( offset ) ;
     };
 
     void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay )
     {
-        Serial.printf( "Delay from node:%u delay = %d\n", nodeId, delay );
+        SERIAL_PRINT( "Delay from node: " );
+        SERIAL_PRINT( nodeId )
+        SERIAL_PRINT( " delay =  " );
+        SERIAL_PRINTLN( delay ) ;
     };
 }
 
