@@ -151,15 +151,15 @@ namespace _BotChassis
 
                     leftMotorSpeed  = scaler * ( rc3D[0] + rc3D[1] );
                     rightMotorSpeed = scaler * ( rc3D[0] - rc3D[1] );
+
+                    SERIAL_PRINT( "=> left: " );
+                    SERIAL_PRINT( leftMotorSpeed );
+                    SERIAL_PRINT( " right: " );
+                    SERIAL_PRINTLN( rightMotorSpeed );
                 #endif
 
                 // reset watchdog
                 watchdog = WATCHDOG_TIMEOUT;
-                //Serial.printf( "=> left: %f, right: %f\n", leftMotorSpeed, rightMotorSpeed );
-                SERIAL_PRINT( "=> left: " );
-                SERIAL_PRINT( leftMotorSpeed );
-                SERIAL_PRINT( " right: " );
-                SERIAL_PRINTLN( rightMotorSpeed );
             }
             // any other message 
             else
