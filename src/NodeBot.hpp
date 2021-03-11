@@ -70,7 +70,7 @@ static Scheduler defaultScheduler;
     static const char * ntpServer = "pool.ntp.org";
 #endif
 
-static timezone tz = { 3600,    0 };
+static timezone tz = { 3600,    3600 };
 static timeval  tv = {    0,    0 };
 
 // namespace to keep callbacks local
@@ -107,31 +107,29 @@ class NodeBot
         {
             //Serial.println("bot setup begin");
 
+            // set timezone values
+            configTime(tz.tz_minuteswest, tz.tz_dsttime, nullptr );
+
             #ifdef WITH_RTC
                 rtc.begin();
-                delay(100);
                 // adjust time from compiletime if not already set
                 #ifdef WITH_RTC_PCF8523
                     if ( !rtc.initialized() || rtc.lostPower() )
-                    {
-                        rtc.adjust( DateTime( F( __DATE__ ), F( __TIME__ ) ) );
-                        Serial.println( "RTC Time adjusted" );
-                        rtc.start();
-                    }
                 #elif defined(WITH_RTC_DS1307)
                     if ( !rtc.isrunning() )
-                    {
-                        rtc.adjust( DateTime( F( __DATE__ ), F( __TIME__ ) ) );
-                        Serial.println( "RTC Time adjusted" );
-                    }
                 #else
                     #error "unknown RTC"
                 #endif
+                {
+                    rtc.adjust( DateTime( F( __DATE__ ), F( __TIME__ ) ) );
+                    Serial.println( "RTC Time adjusted" );
+                    #ifdef WITH_RTC_PCF8523
+                        rtc.start();
+                    #endif
+                }
 
-                delay(100);
                 _NodeBot::serialPrintRtcDateTime();
 
-                delay(100);
                 // set system time from rtc
                 tv.tv_sec = rtc.now().unixtime();
                 settimeofday( &tv, &tz );
@@ -187,7 +185,7 @@ class NodeBot
             _NodeBot::taskSerialPrint.enableDelayed( 30000UL );
             #ifdef HAS_INTERNET_ACCESS
                 defaultScheduler.addTask( _NodeBot::taskGetNtpTime );
-                _NodeBot::taskGetNtpTime.enableDelayed( 60000UL );
+                _NodeBot::taskGetNtpTime.enableDelayed( 120000UL );
             #endif
 
             Serial.println( "MESH IP is " + mesh.getAPIP().toString() );
@@ -275,15 +273,16 @@ namespace _NodeBot
 
     void serialPrint()
     {
-        serialPrintDateTime();
         #ifdef WITH_RTC
             serialPrintRtcDateTime();
         #endif
+        serialPrintDateTime();
     }
 
     #ifdef HAS_INTERNET_ACCESS
         void getNtpTime()
         {
+            Serial.println("NTP-Request");
             // update time from ntp server
             configTime(tz.tz_minuteswest, tz.tz_dsttime, ntpServer);
             #ifdef WITH_RTC
