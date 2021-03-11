@@ -13,6 +13,7 @@ body {
 .row {
 	display: inline-flex;
 	clear: both;
+	justify-content: space-between;
 }
 
 .leftCol {
@@ -20,7 +21,7 @@ body {
 }
 
 .centralCol {
-	float: left;
+	float: center;
 	min-width: 300px;
 }
 

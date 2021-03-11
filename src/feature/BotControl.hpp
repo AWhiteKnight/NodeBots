@@ -26,16 +26,16 @@
 // namespace to keep things local
 namespace _BotControl
 {
-    BotMesh * pMesh;
+    static BotMesh * pMesh;
 
-    uint32_t drive_node = DRIVE_NODE;   // set with build flag!!
-    rc3D_t rc3D;
+    static uint32_t drive_node = DRIVE_NODE;   // set with build flag!!
+    static rc3D_t rc3D;
 
-    int64_t sum_x;
-    int32_t center_x;
-    int64_t sum_y;
-    int32_t center_y;
-    uint32_t loop_counter;
+    static int64_t sum_x;
+    static int32_t center_x;
+    static int64_t sum_y;
+    static int32_t center_y;
+    static uint32_t loop_counter;
 
     StaticJsonDocument<240> doc;  // message size < 250 which is esp-now conform
 

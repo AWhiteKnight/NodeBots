@@ -17,20 +17,24 @@
 // namespace to keep things local
 namespace _BotChassis
 {
-    BotMesh * pMesh;
+    static BotMesh * pMesh;
+
+    static rc3D_t rc3D;
+    StaticJsonDocument<240> doc;  // message size < 250 which is esp-now conform
 
     #define CYCLE_TIME 20UL
+    #define FREQUENCY 1000
     #define WATCHDOG_TIMEOUT 11 // amount of cycles until autostop
-    uint16_t watchdog = WATCHDOG_TIMEOUT; 
+    static uint16_t watchdog = WATCHDOG_TIMEOUT; 
     
     #ifdef WITH_D1MINI_MOTOR_SHIELD
-        //Motor shield I2C Address: 0x30
+        // Motor shield I2C Address: 0x30
         #define SHIELD_ADDRESS 0x30
     #endif
 
     #ifdef IS_DIFF_DRIVE
-        float_t leftMotorSpeed  = 0;
-        float_t rightMotorSpeed = 0;
+        static float_t leftMotorSpeed  = 0;
+        static float_t rightMotorSpeed = 0;
 
         // prototypes - implementation below
         void setMotorSpeeds() ; // Prototype so PlatformIO doesn't complain
@@ -39,15 +43,12 @@ namespace _BotChassis
 
         #ifdef WITH_D1MINI_MOTOR_SHIELD
             // PWM frequency: 1000Hz(1kHz)
-            Motor rightMotor( SHIELD_ADDRESS, _MOTOR_A, 1000 );   //Motor A
-            Motor leftMotor( SHIELD_ADDRESS, _MOTOR_B, 1000 );    //Motor B
+            Motor rightMotor( SHIELD_ADDRESS, _MOTOR_A, FREQUENCY );   //Motor A
+            Motor leftMotor( SHIELD_ADDRESS, _MOTOR_B, FREQUENCY );    //Motor B
         #endif
     #endif
 
     void receivedCallback( uint32_t from, String &msg );
-
-    rc3D_t rc3D;
-    StaticJsonDocument<240> doc;  // message size < 250 which is esp-now conform
 }
 
 class BotChassis

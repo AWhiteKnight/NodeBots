@@ -22,7 +22,7 @@
 // namespace to keep things local
 namespace _BotOtaServer
 {
-    BotMesh * pMesh;
+    static BotMesh * pMesh;
 
     typedef struct {
         TSTRING ident;
@@ -31,8 +31,8 @@ namespace _BotOtaServer
         TSTRING extension;
     } firmware_t;
 
-    File dir;
-    File entry;
+    static File dir;
+    static File entry;
 
     // prototypes - implementation below
     void checkForUpdates();

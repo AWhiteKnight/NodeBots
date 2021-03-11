@@ -18,10 +18,10 @@
 #endif
 #include <ESPAsyncWebServer.h>
 
-const String corsHeader = "Access-Control-Allow-Origin";
-const String corsValue = "*";
-const String defaultMimeType = "text/html";
-const String plainTextMimeType = "text/plain";
+static const String corsHeader = "Access-Control-Allow-Origin";
+static const String corsValue = "*";
+static const String defaultMimeType = "text/html";
+static const String plainTextMimeType = "text/plain";
 
 static AsyncWebServer server( 80 );
 
@@ -29,8 +29,8 @@ static AsyncWebServer server( 80 );
 // implementation below
 namespace _BotWebServer
 {
-    BotMesh * pMesh;
-    StaticJsonDocument<240> recDoc;    // message size < 250 which is esp-now conform
+    static BotMesh * pMesh;
+    static StaticJsonDocument<240> recDoc;    // message size < 250 which is esp-now conform
 
     // prototypes - implementation below
     bool handlePost( AsyncWebServerRequest *request, uint8_t *datas );

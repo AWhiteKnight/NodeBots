@@ -11,7 +11,7 @@
 // namespace to keep things local
 namespace _BotHelloWorld
 {
-    BotMesh * pMesh;
+    static BotMesh * pMesh;
 
     // prototypes - implementation below
     void broadcastBotHelloWorld();

@@ -22,14 +22,14 @@ static Scheduler defaultScheduler;
         #define WITH_RTC
     #endif
     #include "RTClib.h"
-    RTC_PCF8523 rtc;
+    static RTC_PCF8523 rtc;
 #endif
 #ifdef WITH_RTC_DS1307
     #ifndef WITH_RTC
         #define WITH_RTC
     #endif
     #include "RTClib.h"
-    RTC_DS1307 rtc;
+    static RTC_DS1307 rtc;
 #endif
 
 
@@ -67,11 +67,11 @@ static Scheduler defaultScheduler;
 #endif
 
 #ifdef HAS_INTERNET_ACCESS
-    const char * ntpServer = "pool.ntp.org";
+    static const char * ntpServer = "pool.ntp.org";
 #endif
 
-timezone tz = { 3600,    0 };
-timeval  tv = {    0,    0 };
+static timezone tz = { 3600,    0 };
+static timeval  tv = {    0,    0 };
 
 // namespace to keep callbacks local
 // implementation below
@@ -86,10 +86,12 @@ namespace _NodeBot
     void nodeTimeAdjustedCallback( int32_t offset );
     void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay );
 
+    // Task definitions
+    void serialPrint();
+    Task taskSerialPrint( 1000UL * 60UL * 10UL, TASK_FOREVER, &serialPrint );
     #ifdef HAS_INTERNET_ACCESS
         void getNtpTime();
-        // Task definitions
-        Task taskGetNtpTime( 1000UL * 3600UL * 24UL * 10UL , TASK_FOREVER, &getNtpTime );
+        Task taskGetNtpTime( 1000UL * 3600UL * 24UL * 5UL, TASK_FOREVER, &getNtpTime );
     #endif
 }
 
@@ -107,6 +109,7 @@ class NodeBot
 
             #ifdef WITH_RTC
                 rtc.begin();
+                delay(100);
                 // adjust time from compiletime if not already set
                 #ifdef WITH_RTC_PCF8523
                     if ( !rtc.initialized() || rtc.lostPower() )
@@ -125,14 +128,15 @@ class NodeBot
                     #error "unknown RTC"
                 #endif
 
+                delay(100);
                 _NodeBot::serialPrintRtcDateTime();
 
+                delay(100);
                 // set system time from rtc
                 tv.tv_sec = rtc.now().unixtime();
                 settimeofday( &tv, &tz );
             #endif
             
-            configTime( tz.tz_minuteswest, tz.tz_dsttime, (const char *)NULL );
             _NodeBot::serialPrintDateTime();
 
             // set before init() so that you can see startup messages
@@ -142,7 +146,7 @@ class NodeBot
             // Create mesh object with mode WIFI_AP_STA = Station and AccessPoint 
             mesh.init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
 
-            // as the name implies: this will be a root. There should only be one!
+            // as the name implies: this will be a root. There should only be one in your mesh!
             #ifdef IS_MESH_ROOT
                 mesh.setRoot( true );
             #endif
@@ -159,7 +163,7 @@ class NodeBot
 
             mesh.onNewConnection( &_NodeBot::newConnectionCallback );
             mesh.onChangedConnections( &_NodeBot::changedConnectionCallback );
-            mesh.onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
+            //mesh.onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
             mesh.onNodeDelayReceived( &_NodeBot::nodeDelayReceivedCallback );
 
             #ifdef HELLO_WORLD
@@ -179,6 +183,8 @@ class NodeBot
             #endif
 
             // add Tasks
+            defaultScheduler.addTask( _NodeBot::taskSerialPrint );
+            _NodeBot::taskSerialPrint.enableDelayed( 30000UL );
             #ifdef HAS_INTERNET_ACCESS
                 defaultScheduler.addTask( _NodeBot::taskGetNtpTime );
                 _NodeBot::taskGetNtpTime.enableDelayed( 60000UL );
@@ -234,6 +240,12 @@ namespace _NodeBot
 
     void serialPrintDateTime()
     {
+        // set system time from rtc
+        #ifdef WITH_RTC
+            Serial.println( rtc.now().unixtime() );
+            tv.tv_sec = rtc.now().unixtime();
+            settimeofday( &tv, &tz );
+        #endif
         struct tm timeinfo;
         _getLocalTime( &timeinfo );
         _println( &timeinfo, "%A, %B %d %Y %H:%M:%S" );
@@ -260,6 +272,14 @@ namespace _NodeBot
             Serial.println();
         }
     #endif
+
+    void serialPrint()
+    {
+        serialPrintDateTime();
+        #ifdef WITH_RTC
+            serialPrintRtcDateTime();
+        #endif
+    }
 
     #ifdef HAS_INTERNET_ACCESS
         void getNtpTime()
