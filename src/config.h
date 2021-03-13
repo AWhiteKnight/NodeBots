@@ -1,8 +1,10 @@
 #ifndef _config_h_
 #define _config_h_
 
+/**
+ * Configurtion File
+ */
 
-// board specific configuration
 #ifdef ESP32
     #define CHIP_SELECT 33
 #elif defined(ESP8266)

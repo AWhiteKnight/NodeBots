@@ -1,6 +1,3 @@
-#ifndef _NodeBot_hpp_
-#define _NodeBot_hpp_
-
 /**
  * 
  */
@@ -323,5 +320,3 @@ namespace _NodeBot
         SERIAL_PRINTLN( delay ) ;
     };
 }
-
-#endif
