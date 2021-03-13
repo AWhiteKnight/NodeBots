@@ -4,11 +4,9 @@
 /**
  * 
  */
-#include <Arduino.h>
-#include "logging.h"
+#include "../BotFeature.h"
 
-#include "BotMesh.hpp"
-
+#include <ArduinoJson.h>
 #include "IPAddress.h"
 
 #ifdef ESP8266
@@ -17,7 +15,7 @@
 #else
     #include <AsyncTCP.h>
 #endif
-#include "ESPAsyncWebServer.h"
+#include <ESPAsyncWebServer.h>
 
 static const String corsHeader = "Access-Control-Allow-Origin";
 static const String corsValue = "*";
@@ -30,7 +28,6 @@ static AsyncWebServer server( 80 );
 // implementation below
 namespace _BotWebServer
 {
-    static BotMesh * pMesh;
     static StaticJsonDocument<240> recDoc;    // message size < 250 which is esp-now conform
 
     // prototypes - implementation below
@@ -39,14 +36,13 @@ namespace _BotWebServer
         bool sendFromSdCard( AsyncWebServerRequest *request, String path );
     #endif
     void checkIP();
-    void receivedCallback( uint32_t from, String &msg );
 
     // Task definitions
     Task taskCheckIP( 60000UL , TASK_FOREVER, &checkIP );
 }
 
 
-class BotWebServer
+class BotWebServer : public BotFeature
 {
     public:
         BotWebServer()
@@ -54,16 +50,10 @@ class BotWebServer
 
         };
 
-        void setup( BotMesh & mesh, Scheduler & defaultScheduler )
+        void setup( Scheduler & defaultScheduler )
         {
-            // remember mesh for future use
-            _BotWebServer::pMesh = &mesh;
-
-            // set the callbacks
-            mesh.onReceive( &_BotWebServer::receivedCallback );
-
             // implement the bridge
-            mesh.stationManual( WLAN_SSID, WLAN_PASSWORD );
+            BotMesh::getInstance().stationManual( WLAN_SSID, WLAN_PASSWORD );
 
             String hostname = "";
             // set the hostname depending on build_flags
@@ -75,7 +65,7 @@ class BotWebServer
             #else
                 hostname += BotMesh::getInstance().getNodeId();
             #endif
-            mesh.setHostname( hostname.c_str() );
+            BotMesh::getInstance().setHostname( hostname.c_str() );
             SERIAL_PRINT( "Hostname is " );
             SERIAL_PRINTLN( hostname );
 
@@ -107,7 +97,7 @@ class BotWebServer
                     (
                         200,
                         defaultMimeType,
-                        _BotWebServer::pMesh->subConnectionJson().c_str()
+                        BotMesh::getInstance().subConnectionJson().c_str()
                     );
                     response->addHeader( corsHeader, corsValue );
                     request->send( response );
@@ -168,13 +158,13 @@ namespace _BotWebServer
         serializeJson( recDoc, msg );
         if(target == "broadcast")
         {
-            pMesh->sendBroadcast( msg );
+            BotMesh::getInstance().sendBroadcast( msg );
             return true;
         }
         else if(target != "")
         {
             uint32_t tgt = recDoc["tgt"];
-            pMesh->sendSingle( tgt, msg );
+            BotMesh::getInstance().sendSingle( tgt, msg );
             return true;
         }
 
@@ -219,22 +209,13 @@ namespace _BotWebServer
     // callback for scheduler
     void checkIP()
     {
-        if(pMesh->getStationIP())
+        if(BotMesh::getInstance().getStationIP())
         {
             SERIAL_PRINT( "STA IP is " );
-            SERIAL_PRINTLN( pMesh->getStationIP().toString() );
+            SERIAL_PRINTLN( BotMesh::getInstance().getStationIP().toString() );
             taskCheckIP.disable();
             //taskCheckIP.remove();
         }
-    }
-
-    // callbacks for mesh
-    void receivedCallback( uint32_t from, String &msg )
-    {
-        SERIAL_PRINT( "Received from " );
-        SERIAL_PRINT( from );
-        SERIAL_PRINT( "msg=" );
-        SERIAL_PRINTLN( msg.c_str() );
     }
 }
 

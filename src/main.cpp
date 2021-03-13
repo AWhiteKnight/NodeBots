@@ -14,7 +14,6 @@
 #include <Arduino.h>
 
 #include "NodeBot.hpp"
-static NodeBot bot;
 
 void setup() {
     // use default serial speed of boards to see boot messages
@@ -27,9 +26,9 @@ void setup() {
         #error "unknown board"
     #endif
     // setup of the bot
-    bot.setup();
+    NodeBot::getInstance().setup();
 }
 
 void loop() {
-    bot.update();
+    NodeBot::getInstance().update();
 }

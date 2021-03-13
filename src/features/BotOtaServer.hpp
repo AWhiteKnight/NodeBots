@@ -4,10 +4,7 @@
 /**
  * 
  */
-#include <Arduino.h>
-#include "logging.h"
-
-#include "BotMesh.hpp"
+#include "BotFeature.h"
 
 // This feature requires a SD-Card, so do not compile without WITH_SD_CARD set!
 #ifdef HAS_OTA_SERVER 
@@ -23,8 +20,6 @@
 // namespace to keep things local
 namespace _BotOtaServer
 {
-    static BotMesh * pMesh;
-
     typedef struct {
         TSTRING ident;
         TSTRING hardware;
@@ -37,13 +32,12 @@ namespace _BotOtaServer
 
     // prototypes - implementation below
     void checkForUpdates();
-    void receivedCallback( uint32_t from, String &msg );
 
     // Task definitions
     Task taskCheckForUpdates( OTA_BROADCAST_INTERVAL , TASK_FOREVER, &checkForUpdates );
 }
 
-class BotOtaServer
+class BotOtaServer : public BotFeature
 { 
     public:
         BotOtaServer()
@@ -51,14 +45,8 @@ class BotOtaServer
 
         };
 
-        void setup( BotMesh & mesh, Scheduler & defaultScheduler )
+        void setup( Scheduler & defaultScheduler )
         {
-            // remember mesh for future use
-            _BotOtaServer::pMesh = &mesh;
-
-            // set the callbacks
-            mesh.onReceive( &_BotOtaServer::receivedCallback );
-            
             // add Tasks
             defaultScheduler.addTask( _BotOtaServer::taskCheckForUpdates );
             _BotOtaServer::taskCheckForUpdates.enableDelayed( OTA_START_DELAY );
@@ -174,15 +162,6 @@ namespace _BotOtaServer
             }
         #endif
     }
-
-    // callbacks for mesh
-    void receivedCallback( uint32_t from, String &msg )
-    {
-        SERIAL_PRINT( "Received from " );
-        SERIAL_PRINT( from );
-        SERIAL_PRINT( "msg=" );
-        SERIAL_PRINTLN( msg.c_str() );
-    };
 }
 
 #endif

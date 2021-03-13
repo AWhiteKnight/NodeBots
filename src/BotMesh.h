@@ -1,12 +1,7 @@
-#ifndef _BotMesh_hpp_
-#define _BotMesh_hpp_
+#ifndef _BotMesh_h_
+#define _BotMesh_h_
 
-/**
- * 
- */
-#include <Arduino.h>
-#include "logging.h"
-
+#include <patterns.h>
 #include <painlessMesh.h>
 using namespace painlessmesh;
 
@@ -16,6 +11,8 @@ using namespace painlessmesh;
  */
 class BotMesh : public painlessMesh
 {
+    MAKE_SINGLETON(BotMesh)
+    
     public:
 
     protected:

@@ -1,7 +1,7 @@
 #ifndef _D1MINI_MOTOR_SHIELD_H_
 #define _D1MINI_MOTOR_SHIELD_H_
 
-#include <Arduino.h>
+#include "../../BotComponent.h"
 #include <Wire.h>
 
 #define _MOTOR_A 0
@@ -14,7 +14,8 @@
 #define _STANDBY 4
 
 
-class Motor {
+class Motor : public BotComponent
+{
 	public:
 		Motor( uint8_t address, uint8_t motor, uint32_t freq );
 		Motor( uint8_t address, uint8_t motor, uint32_t freq, uint8_t STBY_IO );

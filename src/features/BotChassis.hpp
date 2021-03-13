@@ -4,23 +4,20 @@
 /**
  * 
  */
-#include <Arduino.h>
-#include "logging.h"
+#include "../BotFeature.h"
 
+#include <ArduinoJson.h>
 #include <Wire.h>
 
-#include "BotMesh.hpp"
 #include "std_msgs.h"
 
 #ifdef WITH_D1MINI_MOTOR_SHIELD
-    #include "../component/d1mini/D1Mini_Motor_Shield.h"
+    #include "../components/d1mini/D1Mini_Motor_Shield.h"
 #endif
 
 // namespace to keep things local
 namespace _BotChassis
 {
-    static BotMesh * pMesh;
-
     static rc3D_t rc3D;
     StaticJsonDocument<240> doc;  // message size < 250 which is esp-now conform
 
@@ -53,7 +50,7 @@ namespace _BotChassis
     void receivedCallback( uint32_t from, String &msg );
 }
 
-class BotChassis
+class BotChassis : public BotFeature
 { 
     public:
         BotChassis()
@@ -61,13 +58,10 @@ class BotChassis
 
         };
 
-        void setup( BotMesh & mesh, Scheduler & defaultScheduler )
+        void setup( Scheduler & defaultScheduler )
         {
-            // remember mesh for future use
-            _BotChassis::pMesh = &mesh;
-
             // set the callbacks
-            mesh.onReceive( &_BotChassis::receivedCallback );
+            BotMesh::getInstance().onReceive( &_BotChassis::receivedCallback );
             
             #ifdef IS_DIFF_DRIVE
                 // add Tasks
@@ -88,11 +82,6 @@ namespace _BotChassis
     #ifdef IS_DIFF_DRIVE
         void setMotorSpeeds()
         {
-            SERIAL_PRINT( "Setting speeds: left=" );
-            SERIAL_PRINT( leftMotorSpeed );
-            SERIAL_PRINT( " right=" );
-            SERIAL_PRINTLN( rightMotorSpeed );
-
             // got new command within timeout
             if( watchdog > 0 )
             {
@@ -134,15 +123,17 @@ namespace _BotChassis
 
         // message for me?
         String target = doc["tgt"];
-        String me(pMesh->getNodeId());
+        String me(BotMesh::getInstance().getNodeId());
         if( target == me || target == "broadcast" )
         {
             // rc3D message?
             if(doc.containsKey( "rc3D" ))
             {
+                rc3D[0] = doc["rc3D"][0];
+                rc3D[1] = doc["rc3D"][1];
+                rc3D[2] = doc["rc3D"][2];
+                rc3D[3] = doc["rc3D"][3];
                 #ifdef IS_DIFF_DRIVE
-                    rc3D[0] = doc["rc3D"][0];
-                    rc3D[1] = doc["rc3D"][1];
                     // use only half of speed for turning
                     rc3D[1] = rc3D[1] / 2;
 

@@ -4,10 +4,9 @@
 /**
  * 
  */
-#include <Arduino.h>
-#include "logging.h"
+#include "../BotFeature.h"
 
-#include "BotMesh.hpp"
+#include <ArduinoJson.h>
 
 #include "std_msgs.h"
 
@@ -27,8 +26,6 @@
 // namespace to keep things local
 namespace _BotControl
 {
-    static BotMesh * pMesh;
-
     static uint32_t drive_node = DRIVE_NODE;   // set with build flag!!
     static rc3D_t rc3D;
 
@@ -45,8 +42,6 @@ namespace _BotControl
     void collectValues();
     void sendValues();
 
-    void receivedCallback( uint32_t from, String &msg );
-
     // Task definitions
     #define COLLECT_INTERVAL   10UL     // collect values with 10 ms interval
     #define VALUE_INTERVAL    100UL     // send values with 100 ms interval
@@ -54,7 +49,7 @@ namespace _BotControl
     Task taskSendValues( VALUE_INTERVAL , TASK_FOREVER, &sendValues );
 }
 
-class BotControl
+class BotControl : public BotFeature
 { 
     public:
         BotControl()
@@ -62,11 +57,8 @@ class BotControl
 
         };
 
-        void setup( BotMesh & mesh, Scheduler & defaultScheduler )
+        void setup( Scheduler & defaultScheduler )
         {
-            // remember mesh for future use
-            _BotControl::pMesh = &mesh;
-
             #ifdef ESP32
                 // configure pins
                 pinMode( JOY1_SW, INPUT );
@@ -76,9 +68,6 @@ class BotControl
 
             #endif
 
-            // set the callbacks
-            mesh.onReceive( &_BotControl::receivedCallback );
-            
             // add Tasks
             defaultScheduler.addTask( _BotControl::taskCollectValues );
             _BotControl::taskCollectValues.enable();
@@ -169,8 +158,11 @@ namespace _BotControl
 
             SERIAL_PRINT( "rc3D: " );
             SERIAL_PRINT( rc3D[0] );
+            SERIAL_PRINT( "," );
             SERIAL_PRINT( rc3D[1] );
+            SERIAL_PRINT( "," );
             SERIAL_PRINT( rc3D[2] );
+            SERIAL_PRINT( "," );
             SERIAL_PRINTLN( rc3D[3] );
 
             // create JSON
@@ -185,7 +177,7 @@ namespace _BotControl
             String msg;
             serializeJson( doc, msg );
             //Serial.println( msg );
-            pMesh->sendSingle( drive_node, msg );
+            BotMesh::getInstance().sendSingle( drive_node, msg );
         } 
         else
         {
@@ -197,15 +189,6 @@ namespace _BotControl
         sum_x = 0;
         sum_y = 0;
     }
-
-    // callbacks for mesh
-    void receivedCallback( uint32_t from, String &msg )
-    {
-        SERIAL_PRINT( "Received from " );
-        SERIAL_PRINT( from );
-        SERIAL_PRINT( "msg=" );
-        SERIAL_PRINTLN( msg.c_str() );
-    };
 }
 
 #endif

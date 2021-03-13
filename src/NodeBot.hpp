@@ -11,8 +11,7 @@
 #include "secrets.h"
 
 // a specialization of painlessMesh to implement extensions
-#include "feature/BotMesh.hpp"
-static BotMesh mesh;
+#include "BotMesh.h"
 
 // to control tasks
 static Scheduler defaultScheduler;
@@ -42,7 +41,7 @@ static Scheduler defaultScheduler;
 
 #ifdef HELLO_WORLD
     // a simple hello world feature
-    #include "feature/BotHelloWorld.hpp"
+    #include "features/BotHelloWorld.hpp"
     static BotHelloWorld hello;
 #endif
 
@@ -51,19 +50,19 @@ static Scheduler defaultScheduler;
         #define HAS_INTERNET_ACCESS
     #endif
     // the web server feature
-    #include "feature/BotWebServer.hpp"
+    #include "features/BotWebServer.hpp"
     static BotWebServer webServer;
 #endif
 
 #ifdef HAS_CHASSIS
     // the chassis feature
-    #include "feature/BotChassis.hpp"
+    #include "features/BotChassis.hpp"
     static BotChassis chassis;
 #endif
 
 #ifdef HAS_CONTROL
     // the control feature
-    #include "feature/BotControl.hpp"
+    #include "features/BotControl.hpp"
     static BotControl control;
 #endif
 
@@ -71,9 +70,10 @@ static Scheduler defaultScheduler;
     static const char * ntpServer = "pool.ntp.org";
 #endif
 
-static timezone tz = { 3600,    3600 };
-static timeval  tv = {    0,    0 };
-
+static timezone tz = { 3600, 3600 };
+#ifdef WITH_RTC
+    static timeval tv = { 0, 0 };
+#endif
 // namespace to keep callbacks local
 // implementation below
 namespace _NodeBot
@@ -99,13 +99,10 @@ namespace _NodeBot
 }
 
 class NodeBot
-{ 
+{
+    MAKE_SINGLETON(NodeBot)
+
     public:
-        NodeBot()
-        {
-
-        };
-
         void setup()
         {
             SERIAL_PRINTLN("bot setup begin");
@@ -143,46 +140,46 @@ class NodeBot
             // set before init() so that you can see startup messages
             // ERROR | STARTUP | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE
             #ifdef SERIAL_DEBUG
-                mesh.setDebugMsgTypes( ERROR );
+                BotMesh::getInstance().setDebugMsgTypes( ERROR );
             #endif
 
             // Create mesh object with mode WIFI_AP_STA = Station and AccessPoint 
-            mesh.init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
+            BotMesh::getInstance().init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
 
             // as the name implies: this will be a root. There should only be one in your mesh!
             #ifdef IS_MESH_ROOT
-                mesh.setRoot( true );
+                BotMesh::getInstance().setRoot( true );
             #endif
 
             // A node should ideally know the mesh contains a root
             // If no root is present, restructuring might slow down, but still should work
             // So call this on all nodes regardless we will have a root or not.
-            mesh.setContainsRoot();
+            BotMesh::getInstance().setContainsRoot();
 
             // enable OTA if a role is defined (should be done as build flag)
             #ifdef OTA_ROLE
-                mesh.initOTAReceive( OTA_ROLE );
+                BotMesh::getInstance().initOTAReceive( OTA_ROLE );
             #endif
 
-            mesh.onNewConnection( &_NodeBot::newConnectionCallback );
-            mesh.onChangedConnections( &_NodeBot::changedConnectionCallback );
-            mesh.onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
-            mesh.onNodeDelayReceived( &_NodeBot::nodeDelayReceivedCallback );
+            BotMesh::getInstance().onNewConnection( &_NodeBot::newConnectionCallback );
+            BotMesh::getInstance().onChangedConnections( &_NodeBot::changedConnectionCallback );
+            BotMesh::getInstance().onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
+            BotMesh::getInstance().onNodeDelayReceived( &_NodeBot::nodeDelayReceivedCallback );
 
             #ifdef HELLO_WORLD
-                hello.setup( mesh, defaultScheduler );
+                hello.setup( defaultScheduler );
             #endif
             
             #ifdef HAS_WEB_SERVER
-                webServer.setup( mesh, defaultScheduler );
+                webServer.setup( defaultScheduler );
             #endif
 
             #ifdef HAS_CHASSIS
-                chassis.setup( mesh, defaultScheduler );
+                chassis.setup( defaultScheduler );
             #endif
 
             #ifdef HAS_CONTROL
-                control.setup( mesh, defaultScheduler );
+                control.setup( defaultScheduler );
             #endif
 
             // add Tasks
@@ -195,7 +192,7 @@ class NodeBot
                 _NodeBot::taskGetNtpTime.enableDelayed( 90000UL );
             #endif
 
-            SERIAL_PRINTLN( "MESH IP is " + mesh.getAPIP().toString() );
+            SERIAL_PRINTLN( "MESH IP is " + BotMesh::getInstance().getAPIP().toString() );
 
             SERIAL_PRINTLN("bot setup end");
         };
@@ -203,7 +200,7 @@ class NodeBot
         void update()
         {
             // this will run the schedulers as well
-            mesh.update();
+            BotMesh::getInstance().update();
         };
 
     protected:
@@ -322,7 +319,7 @@ namespace _NodeBot
     void nodeTimeAdjustedCallback( int32_t offset )
     {
         SERIAL_PRINT( "Adjusted time " );
-        SERIAL_PRINT( mesh.getNodeTime() )
+        SERIAL_PRINT( BotMesh::getInstance().getNodeTime() )
         SERIAL_PRINT( " Offset = " );
         SERIAL_PRINTLN( offset ) ;
     };
