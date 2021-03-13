@@ -24,10 +24,10 @@ class BotHelloWorld : public BotFeature
 
         };
 
-        void setup( Scheduler & defaultScheduler )
+        void setup( Scheduler * defaultScheduler )
         {
             // add Tasks
-            defaultScheduler.addTask( _BotHelloWorld::taskBotHelloWorld );
+            defaultScheduler->addTask( _BotHelloWorld::taskBotHelloWorld );
             _BotHelloWorld::taskBotHelloWorld.enable();
         };
 

@@ -3,7 +3,6 @@
  */
 
 #include "BotFeature.h"
-#include "BotMesh.h"
 
 /**
  * 
@@ -12,3 +11,11 @@ BotFeature::BotFeature()
 {
     // creation
 }
+
+/**
+ * 
+ */
+void BotFeature::setMsgRecCallback( receivedCallback_t onReceive )
+{
+    BotMesh::getInstance().onReceive( onReceive );
+};

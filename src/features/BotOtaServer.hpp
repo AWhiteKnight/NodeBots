@@ -45,10 +45,10 @@ class BotOtaServer : public BotFeature
 
         };
 
-        void setup( Scheduler & defaultScheduler )
+        void setup( Scheduler * defaultScheduler )
         {
             // add Tasks
-            defaultScheduler.addTask( _BotOtaServer::taskCheckForUpdates );
+            defaultScheduler->addTask( _BotOtaServer::taskCheckForUpdates );
             _BotOtaServer::taskCheckForUpdates.enableDelayed( OTA_START_DELAY );
         };
 

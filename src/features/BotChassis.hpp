@@ -58,14 +58,14 @@ class BotChassis : public BotFeature
 
         };
 
-        void setup( Scheduler & defaultScheduler )
+        void setup( Scheduler * defaultScheduler )
         {
             // set the callbacks
-            BotMesh::getInstance().onReceive( &_BotChassis::receivedCallback );
+            setMsgRecCallback( &_BotChassis::receivedCallback );
             
             #ifdef IS_DIFF_DRIVE
                 // add Tasks
-                defaultScheduler.addTask( _BotChassis::taskSetMotorSpeeds );
+                defaultScheduler->addTask( _BotChassis::taskSetMotorSpeeds );
                 _BotChassis::taskSetMotorSpeeds.enable();
             #endif
         };

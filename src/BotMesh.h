@@ -5,6 +5,8 @@
 using namespace painlessmesh;
 
 #include <patterns.h>
+// defines for the MESH SSID etc. to use
+#include <secrets.h>
 
 /**
  * BotMesh is an extension to painlessMesh 
@@ -15,6 +17,7 @@ class BotMesh : public painlessMesh
     MAKE_SINGLETON(BotMesh)
     
     public:
+        void setup( Scheduler * defaultScheduler );
 
     protected:
 

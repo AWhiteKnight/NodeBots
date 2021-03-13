@@ -57,7 +57,7 @@ class BotControl : public BotFeature
 
         };
 
-        void setup( Scheduler & defaultScheduler )
+        void setup( Scheduler * defaultScheduler )
         {
             #ifdef ESP32
                 // configure pins
@@ -69,9 +69,9 @@ class BotControl : public BotFeature
             #endif
 
             // add Tasks
-            defaultScheduler.addTask( _BotControl::taskCollectValues );
+            defaultScheduler->addTask( _BotControl::taskCollectValues );
             _BotControl::taskCollectValues.enable();
-            defaultScheduler.addTask( _BotControl::taskSendValues );
+            defaultScheduler->addTask( _BotControl::taskSendValues );
             _BotControl::taskSendValues.enable();
 
             // calibrate sticks

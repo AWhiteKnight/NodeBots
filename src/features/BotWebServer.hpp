@@ -48,7 +48,7 @@ class BotWebServer : public BotFeature
 
         };
 
-        void setup( Scheduler & defaultScheduler )
+        void setup( Scheduler * defaultScheduler )
         {
             // implement the bridge
             BotMesh::getInstance().stationManual( WLAN_SSID, WLAN_PASSWORD );
@@ -73,7 +73,7 @@ class BotWebServer : public BotFeature
             server.begin();
 
             // add Tasks
-            defaultScheduler.addTask( _BotWebServer::taskCheckIP );
+            defaultScheduler->addTask( _BotWebServer::taskCheckIP );
             _BotWebServer::taskCheckIP.enableDelayed(60000UL);
         }
 
