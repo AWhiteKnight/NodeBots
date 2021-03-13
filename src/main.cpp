@@ -1,19 +1,9 @@
 /**
  *  Wrapper to the Arduino framwork
  */
-
-// board specific configuration
-#ifdef ESP32
-    #define CHIP_SELECT 33
-#elif defined(ESP8266)
-    #define CHIP_SELECT D8
-#else
-    #error "unknown board"
-#endif
-
 #include <Arduino.h>
 
-#include "NodeBot.hpp"
+#include "NodeBot.h"
 
 void setup() {
     // use default serial speed of boards to see boot messages

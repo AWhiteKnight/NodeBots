@@ -1,9 +1,10 @@
 #ifndef _BotMesh_h_
 #define _BotMesh_h_
 
-#include <patterns.h>
 #include <painlessMesh.h>
 using namespace painlessmesh;
+
+#include <patterns.h>
 
 /**
  * BotMesh is an extension to painlessMesh 

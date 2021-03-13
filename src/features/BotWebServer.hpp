@@ -1,16 +1,14 @@
 #ifndef _BotWebServer_hpp_
 #define _BotWebServer_hpp_
 
-/**
- * 
- */
+#include "../config.h"
 #include "../BotFeature.h"
 
 #include <ArduinoJson.h>
 #include "IPAddress.h"
 
 #ifdef ESP8266
-    #include "Hash.h"
+    #include <Hash.h>
     #include <ESPAsyncTCP.h>
 #else
     #include <AsyncTCP.h>

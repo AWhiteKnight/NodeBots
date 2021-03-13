@@ -5,11 +5,12 @@
  * 
  */
 #include <Arduino.h>
-#include "logging.h"
+#include <logging.h>
 
 // defines for the MESH SSID etc. to use
-#include "secrets.h"
+#include <secrets.h>
 
+#include "NodeBot.h"
 // a specialization of painlessMesh to implement extensions
 #include "BotMesh.h"
 
@@ -98,117 +99,107 @@ namespace _NodeBot
     #endif
 }
 
-class NodeBot
+void NodeBot::setup()
 {
-    MAKE_SINGLETON(NodeBot)
+    SERIAL_PRINTLN("bot setup begin");
 
-    public:
-        void setup()
+    // set timezone values
+    configTime(tz.tz_minuteswest, tz.tz_dsttime, nullptr );
+
+    #ifdef WITH_RTC
+        rtc.begin();
+        // adjust time from compiletime if not already set
+        #ifdef WITH_RTC_PCF8523
+            if ( !rtc.initialized() || rtc.lostPower() )
+        #elif defined(WITH_RTC_DS1307)
+            if ( !rtc.isrunning() )
+        #else
+            #error "unknown RTC"
+        #endif
         {
-            SERIAL_PRINTLN("bot setup begin");
-
-            // set timezone values
-            configTime(tz.tz_minuteswest, tz.tz_dsttime, nullptr );
-
-            #ifdef WITH_RTC
-                rtc.begin();
-                // adjust time from compiletime if not already set
-                #ifdef WITH_RTC_PCF8523
-                    if ( !rtc.initialized() || rtc.lostPower() )
-                #elif defined(WITH_RTC_DS1307)
-                    if ( !rtc.isrunning() )
-                #else
-                    #error "unknown RTC"
-                #endif
-                {
-                    rtc.adjust( DateTime( F( __DATE__ ), F( __TIME__ ) ) );
-                    SERIAL_PRINTLN( "RTC Time adjusted" );
-                    #ifdef WITH_RTC_PCF8523
-                        rtc.start();
-                    #endif
-                }
-                #ifdef SERIAL_DEBUG
-                    _NodeBot::serialPrintRtcDateTime();
-                #endif
-                // set system time from rtc
-                tv.tv_sec = rtc.now().unixtime();
-                settimeofday( &tv, &tz );
+            rtc.adjust( DateTime( F( __DATE__ ), F( __TIME__ ) ) );
+            SERIAL_PRINTLN( "RTC Time adjusted" );
+            #ifdef WITH_RTC_PCF8523
+                rtc.start();
             #endif
-            #ifdef SERIAL_DEBUG
-                _NodeBot::serialPrintDateTime();
-            #endif
-            // set before init() so that you can see startup messages
-            // ERROR | STARTUP | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE
-            #ifdef SERIAL_DEBUG
-                BotMesh::getInstance().setDebugMsgTypes( ERROR );
-            #endif
+        }
+        #ifdef SERIAL_DEBUG
+            _NodeBot::serialPrintRtcDateTime();
+        #endif
+        // set system time from rtc
+        tv.tv_sec = rtc.now().unixtime();
+        settimeofday( &tv, &tz );
+    #endif
+    #ifdef SERIAL_DEBUG
+        _NodeBot::serialPrintDateTime();
+    #endif
+    // set before init() so that you can see startup messages
+    // ERROR | STARTUP | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE
+    #ifdef SERIAL_DEBUG
+        BotMesh::getInstance().setDebugMsgTypes( ERROR );
+    #endif
 
-            // Create mesh object with mode WIFI_AP_STA = Station and AccessPoint 
-            BotMesh::getInstance().init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
+    // Create mesh object with mode WIFI_AP_STA = Station and AccessPoint 
+    BotMesh::getInstance().init( MESH_SSID, MESH_PASSWORD, &defaultScheduler, MESH_PORT, WIFI_AP_STA, MESH_CHANNEL );
 
-            // as the name implies: this will be a root. There should only be one in your mesh!
-            #ifdef IS_MESH_ROOT
-                BotMesh::getInstance().setRoot( true );
-            #endif
+    // as the name implies: this will be a root. There should only be one in your mesh!
+    #ifdef IS_MESH_ROOT
+        BotMesh::getInstance().setRoot( true );
+    #endif
 
-            // A node should ideally know the mesh contains a root
-            // If no root is present, restructuring might slow down, but still should work
-            // So call this on all nodes regardless we will have a root or not.
-            BotMesh::getInstance().setContainsRoot();
+    // A node should ideally know the mesh contains a root
+    // If no root is present, restructuring might slow down, but still should work
+    // So call this on all nodes regardless we will have a root or not.
+    BotMesh::getInstance().setContainsRoot();
 
-            // enable OTA if a role is defined (should be done as build flag)
-            #ifdef OTA_ROLE
-                BotMesh::getInstance().initOTAReceive( OTA_ROLE );
-            #endif
+    // enable OTA if a role is defined (should be done as build flag)
+    #ifdef OTA_ROLE
+        BotMesh::getInstance().initOTAReceive( OTA_ROLE );
+    #endif
 
-            BotMesh::getInstance().onNewConnection( &_NodeBot::newConnectionCallback );
-            BotMesh::getInstance().onChangedConnections( &_NodeBot::changedConnectionCallback );
-            BotMesh::getInstance().onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
-            BotMesh::getInstance().onNodeDelayReceived( &_NodeBot::nodeDelayReceivedCallback );
+    BotMesh::getInstance().onNewConnection( &_NodeBot::newConnectionCallback );
+    BotMesh::getInstance().onChangedConnections( &_NodeBot::changedConnectionCallback );
+    BotMesh::getInstance().onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
+    BotMesh::getInstance().onNodeDelayReceived( &_NodeBot::nodeDelayReceivedCallback );
 
-            #ifdef HELLO_WORLD
-                hello.setup( defaultScheduler );
-            #endif
-            
-            #ifdef HAS_WEB_SERVER
-                webServer.setup( defaultScheduler );
-            #endif
+    #ifdef HELLO_WORLD
+        hello.setup( defaultScheduler );
+    #endif
+    
+    #ifdef HAS_WEB_SERVER
+        webServer.setup( defaultScheduler );
+    #endif
 
-            #ifdef HAS_CHASSIS
-                chassis.setup( defaultScheduler );
-            #endif
+    #ifdef HAS_CHASSIS
+        chassis.setup( defaultScheduler );
+    #endif
 
-            #ifdef HAS_CONTROL
-                control.setup( defaultScheduler );
-            #endif
+    #ifdef HAS_CONTROL
+        control.setup( defaultScheduler );
+    #endif
 
-            // add Tasks
-            #ifdef SERIAL_DEBUG
-                defaultScheduler.addTask( _NodeBot::taskSerialPrint );
-                _NodeBot::taskSerialPrint.enableDelayed( 30000UL );
-            #endif
-            #ifdef HAS_INTERNET_ACCESS
-                defaultScheduler.addTask( _NodeBot::taskGetNtpTime );
-                _NodeBot::taskGetNtpTime.enableDelayed( 90000UL );
-            #endif
+    // add Tasks
+    #ifdef SERIAL_DEBUG
+        defaultScheduler.addTask( _NodeBot::taskSerialPrint );
+        _NodeBot::taskSerialPrint.enableDelayed( 30000UL );
+    #endif
+    #ifdef HAS_INTERNET_ACCESS
+        defaultScheduler.addTask( _NodeBot::taskGetNtpTime );
+        _NodeBot::taskGetNtpTime.enableDelayed( 90000UL );
+    #endif
 
-            SERIAL_PRINTLN( "MESH IP is " + BotMesh::getInstance().getAPIP().toString() );
+    SERIAL_PRINTLN( "MESH IP is " + BotMesh::getInstance().getAPIP().toString() );
 
-            SERIAL_PRINTLN("bot setup end");
-        };
-
-        void update()
-        {
-            // this will run the schedulers as well
-            BotMesh::getInstance().update();
-        };
-
-    protected:
-
-    private:
+    SERIAL_PRINTLN("bot setup end");
 };
 
-// namespace to keep callbacks local
+void NodeBot::update()
+{
+    // this will run the schedulers as well
+    BotMesh::getInstance().update();
+};
+
+// namespace implementation
 namespace _NodeBot
 {
     #ifdef SERIAL_DEBUG
