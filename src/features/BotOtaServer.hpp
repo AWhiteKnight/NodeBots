@@ -8,9 +8,13 @@
 
 // This feature requires a SD-Card, so do not compile without WITH_SD_CARD set!
 #ifdef HAS_OTA_SERVER 
-#ifndef WITH_SD_CARD
-    #error "OTA-Server needs a SD-Card and build-flag -D WITH_SD_CARD set in platformio.ini"
-#endif
+    #ifndef WITH_SD_CARD
+        #error "OTA-Server needs a SD-Card and build-flag -D WITH_SD_CARD set in platformio.ini"
+    #endif
+
+    #include <FS.h>
+    #include <SD.h>
+    #include <SPI.h>
 #endif
 
 #define OTA_PART_SIZE 240                   // How many bytes to send per OTA data packet

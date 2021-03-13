@@ -7,6 +7,12 @@
 #include <ArduinoJson.h>
 #include "IPAddress.h"
 
+#ifdef WITH_SD_CARD
+    #include <FS.h>
+    #include <SD.h>
+    #include <SPI.h>
+#endif
+
 #ifdef ESP8266
     #include <Hash.h>
     #include <ESPAsyncTCP.h>

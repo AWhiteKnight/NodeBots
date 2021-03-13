@@ -3,6 +3,9 @@
 
 #include <patterns.h>
 
+// a specialization of painlessMesh to implement extensions
+#include "BotMesh.h"
+
 /**
  * 
  */
@@ -11,8 +14,7 @@ class NodeBot
     MAKE_SINGLETON(NodeBot)
 
     public:
-        void setup();
-        void update();
+        void setup( Scheduler * defaultScheduler );
 
     protected:
 
