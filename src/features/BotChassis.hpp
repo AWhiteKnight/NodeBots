@@ -114,11 +114,6 @@ namespace _BotChassis
     // callbacks for mesh
     void receivedCallback( uint32_t from, String &msg )
     {
-        SERIAL_PRINT( "Received from " );
-        SERIAL_PRINT( from );
-        SERIAL_PRINT( "msg=" );
-        SERIAL_PRINTLN( msg.c_str() );
-        
         deserializeJson(doc, msg);
 
         // message for me?

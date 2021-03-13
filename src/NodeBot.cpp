@@ -84,6 +84,7 @@ namespace _NodeBot
     void changedConnectionCallback();
     void nodeTimeAdjustedCallback( int32_t offset );
     void nodeDelayReceivedCallback( uint32_t nodeId, int32_t delay );
+    void receivedCallback( uint32_t from, String &msg );
 
     // Task definitions
     #ifdef SERIAL_DEBUG
@@ -158,6 +159,8 @@ void NodeBot::setup()
     BotMesh::getInstance().onChangedConnections( &_NodeBot::changedConnectionCallback );
     BotMesh::getInstance().onNodeTimeAdjusted( &_NodeBot::nodeTimeAdjustedCallback );
     BotMesh::getInstance().onNodeDelayReceived( &_NodeBot::nodeDelayReceivedCallback );
+
+    BotMesh::getInstance().onReceive( &_NodeBot::receivedCallback );
 
     #ifdef HELLO_WORLD
         hello.setup( defaultScheduler );
@@ -318,5 +321,13 @@ namespace _NodeBot
         SERIAL_PRINT( nodeId )
         SERIAL_PRINT( " delay =  " );
         SERIAL_PRINTLN( delay ) ;
+    };
+
+    void receivedCallback( uint32_t from, String &msg )
+    {
+        SERIAL_PRINT( "Received from " );
+        SERIAL_PRINT( from );
+        SERIAL_PRINT( "msg=" );
+        SERIAL_PRINTLN( msg.c_str() );
     };
 }
